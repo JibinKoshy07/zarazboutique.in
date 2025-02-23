@@ -1,0 +1,30 @@
+{
+	
+    "shop" : {
+        "currency": "INR",
+        "language": "cn",
+        "weightUnit": "kg",
+        "homeUrl": "http://localhost:3000"
+    
+    },
+        "system": {
+          "theme": "eve"
+        },
+    
+    
+    "themeConfig": {
+        "logo": {
+            "alt": "Zaaraz Logo",
+            "src": "/zara.png",
+            "width": 100,
+            "height": 100
+        },
+        "headTags": {
+            "links": [],
+            "metas": [],
+            "scripts": []
+        },
+        "copyRight": "© 2025 Zaaraaz. All Rights Reserved."
+    }
+    
+}

@@ -1,0 +1,21 @@
+{
+  "name": "evershop-npm",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "setup": "evershop install",
+    "build": "evershop build",
+    "start": "evershop start",
+    "start:debug": "evershop start --debug",
+    "dev": "evershop dev",
+    "user:create": "evershop user:create",
+    "user:changePassword": "evershop user:changePassword"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@evershop/evershop": "^1.2.2"
+  }
+}
