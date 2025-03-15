@@ -1,0 +1,18 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+spec:
+  schedule: "8 0 * * *"  # Runs every day at 3 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            image: postgres:16
+            command:
+            - /bin/sh
+            - -c
+            - "PGPASSWORD=postgres pg_dump -U admin -h postgres mydatabase > /backup/db.sql"
+          restartPolicy: OnFailure

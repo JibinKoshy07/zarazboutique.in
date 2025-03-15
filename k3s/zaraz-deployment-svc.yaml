@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zarazboutique
+  namespace: zaraz
+  labels:
+    app: zarazboutique
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zarazboutique
+  template:
+    metadata:
+      labels:
+        app: zarazboutique
+    spec:
+      containers:
+        - name: zarazboutique
+          image: jibu07/zarazboutique.in:v9
+          env:
+            - name: DB_HOST
+              value: "postgres"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: "postgres"
+            - name: DB_PASSWORD
+              value: "postgres"
+            - name: DB_NAME
+              value: "postgres"
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zarazboutique-service
+  namespace: zaraz
+spec:
+  selector:
+    app: zarazboutique
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+      nodePort: 30080  # Set a specific external port (optional)
+  type: NodePort
+

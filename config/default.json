@@ -4,7 +4,7 @@
         "currency": "INR",
         "language": "cn",
         "weightUnit": "kg",
-        "homeUrl": "http://localhost:3000"
+        "homeUrl": "https://dev.zarazboutique.in"
     
     },
         "system": {
@@ -24,7 +24,7 @@
             "metas": [],
             "scripts": []
         },
-        "copyRight": "© 2025 Zaaraaz. All Rights Reserved."
+        "copyRight": "© 2025 Zaraz. All Rights Reserved."
     }
     
 }
