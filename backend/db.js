@@ -56,6 +56,7 @@ const initDatabase = async () => {
     await client.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50)`);
     await client.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status VARCHAR(50) DEFAULT 'Pending'`);
     await client.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipping_address JSONB`);
+    await client.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS cf_order_id VARCHAR(60)`);
 
     // Status history per order: powers the user's tracking timeline
     await client.query(`

@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const { pool, initDatabase } = require('./db');
 const { sendOrderConfirmation, sendAdminNotification, sendStatusUpdateEmail, sendContactMessage } = require('./emailService');
 
@@ -37,7 +38,8 @@ const ORDER_STATUSES = ['Placed', 'Processing', 'Shipped', 'Out for Delivery', '
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+// Capture raw request body too — Cashfree webhook signature is computed over the raw bytes
+app.use(express.json({ verify: (req, res, buf) => { req.rawBody = buf.toString(); } }));
 
 // Serve uploaded product images
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -260,6 +262,216 @@ app.post('/api/contact', async (req, res) => {
   } catch (err) {
     console.error('Contact form error:', err);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============ CASHFREE PAYMENTS ============
+
+const CASHFREE_API_VERSION = '2023-08-01';
+const CF_BASE = process.env.CASHFREE_ENV === 'production'
+  ? 'https://api.cashfree.com/pg'
+  : 'https://sandbox.cashfree.com/pg';
+
+const cashfreeConfigured = () => Boolean(process.env.CASHFREE_APP_ID && process.env.CASHFREE_SECRET_KEY);
+
+async function cashfreeRequest(method, path, body) {
+  const res = await fetch(`${CF_BASE}${path}`, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-version': CASHFREE_API_VERSION,
+      'x-client-id': process.env.CASHFREE_APP_ID,
+      'x-client-secret': process.env.CASHFREE_SECRET_KEY
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.message || `Cashfree error ${res.status}`);
+  }
+  return data;
+}
+
+// Recompute the order total from DB prices — never trust client-supplied amounts for payment
+async function computeOrderTotal(items) {
+  let subtotal = 0;
+  const lineItems = [];
+  for (const item of items) {
+    const result = await pool.query('SELECT name, price FROM products WHERE id = $1', [item.id]);
+    if (result.rows.length === 0) {
+      throw new Error(`Product ${item.id} not found`);
+    }
+    const product = result.rows[0];
+    const qty = parseInt(item.quantity, 10) || 1;
+    subtotal += parseFloat(product.price) * qty;
+    lineItems.push({ id: item.id, name: product.name, price: parseFloat(product.price), quantity: qty });
+  }
+  const shipping = subtotal > 3000 ? 0 : 99;
+  const discount = Math.round(subtotal * 0.05);
+  return { total: subtotal + shipping - discount, lineItems };
+}
+
+async function markOrderPaid(orderId) {
+  await pool.query(
+    `UPDATE orders SET payment_status = 'Paid' WHERE id = $1 AND payment_status != 'Paid'`,
+    [orderId]
+  );
+}
+
+// Create Cashfree order for online payment
+app.post('/api/payments/cashfree/create-order', async (req, res) => {
+  try {
+    if (!cashfreeConfigured()) {
+      return res.status(503).json({ error: 'Online payments are not configured yet' });
+    }
+
+    const { userId, items, address } = req.body;
+    if (!userId || !items || items.length === 0) {
+      return res.status(400).json({ error: 'Invalid order data' });
+    }
+
+    const userResult = await pool.query('SELECT name, email FROM users WHERE id = $1', [userId]);
+    const user = userResult.rows[0];
+    if (!user) {
+      return res.status(400).json({ error: 'User not found. Please log out and log in again.' });
+    }
+
+    const { total, lineItems } = await computeOrderTotal(items);
+
+    const shippingAddress = address && address.fullName ? {
+      fullName: address.fullName || null,
+      phone: address.phone || null,
+      house: address.house || null,
+      street: address.street || null,
+      landmark: address.landmark || null,
+      city: address.city || null,
+      state: address.state || null,
+      pinCode: address.pinCode || null,
+      country: address.country || null
+    } : null;
+
+    // Create the internal order first (payment pending), then attach the Cashfree order id
+    const orderResult = await pool.query(
+      'INSERT INTO orders (user_id, total_amount, status, payment_method, payment_status, shipping_address) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
+      [userId, total, 'Placed', 'Cashfree', 'Pending', shippingAddress ? JSON.stringify(shippingAddress) : null]
+    );
+    const orderId = orderResult.rows[0].id;
+
+    for (const item of lineItems) {
+      await pool.query(
+        'INSERT INTO order_items (order_id, product_id, product_name, product_price, quantity) VALUES ($1, $2, $3, $4, $5)',
+        [orderId, item.id, item.name, item.price, item.quantity]
+      );
+    }
+
+    const cfOrderId = `zaraz_${orderId}`;
+    const phone = (shippingAddress && shippingAddress.phone ? shippingAddress.phone : '').replace(/\D/g, '').slice(-10) || '9999999999';
+
+    const cfPayload = {
+      order_id: cfOrderId,
+      order_amount: Number(total.toFixed(2)),
+      order_currency: 'INR',
+      customer_details: {
+        customer_id: `user_${userId}`,
+        customer_name: user.name || 'Customer',
+        customer_email: user.email || 'customer@example.com',
+        customer_phone: phone
+      }
+    };
+    if (process.env.APP_BASE_URL) {
+      cfPayload.order_meta = { return_url: `${process.env.APP_BASE_URL}/orders.html?orderId=${orderId}` };
+    }
+
+    const cfOrder = await cashfreeRequest('POST', '/orders', cfPayload);
+
+    await pool.query('UPDATE orders SET cf_order_id = $1 WHERE id = $2', [cfOrderId, orderId]);
+
+    res.json({
+      orderId,
+      cfOrderId,
+      paymentSessionId: cfOrder.payment_session_id,
+      mode: process.env.CASHFREE_ENV === 'production' ? 'production' : 'sandbox',
+      amount: total
+    });
+  } catch (err) {
+    console.error('Cashfree create-order error:', err);
+    res.status(500).json({ error: err.message || 'Could not initiate payment' });
+  }
+});
+
+// Verify payment after the checkout modal closes (client-driven confirmation)
+app.get('/api/payments/cashfree/verify/:orderId', async (req, res) => {
+  try {
+    if (!cashfreeConfigured()) {
+      return res.status(503).json({ error: 'Online payments are not configured yet' });
+    }
+
+    const orderId = req.params.orderId;
+    const orderResult = await pool.query('SELECT cf_order_id, payment_status FROM orders WHERE id = $1', [orderId]);
+    const order = orderResult.rows[0];
+    if (!order || !order.cf_order_id) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    if (order.payment_status === 'Paid') {
+      return res.json({ status: 'PAID', orderId });
+    }
+
+    const cfOrder = await cashfreeRequest('GET', `/orders/${order.cf_order_id}`);
+
+    if (cfOrder.order_status === 'PAID') {
+      await markOrderPaid(orderId);
+      return res.json({ status: 'PAID', orderId });
+    }
+
+    if (['EXPIRED', 'TERMINATED'].includes(cfOrder.order_status)) {
+      await pool.query(`UPDATE orders SET status = 'Payment Failed', payment_status = 'Failed' WHERE id = $1`, [orderId]);
+      return res.json({ status: 'FAILED', orderId });
+    }
+
+    res.json({ status: 'PENDING', orderId });
+  } catch (err) {
+    console.error('Cashfree verify error:', err);
+    res.status(500).json({ error: err.message || 'Could not verify payment' });
+  }
+});
+
+// Webhook: Cashfree calls this on payment events (reliable confirmation)
+app.post('/api/webhooks/cashfree', async (req, res) => {
+  try {
+    const secret = process.env.CASHFREE_WEBHOOK_SECRET || process.env.CASHFREE_SECRET_KEY;
+    const timestamp = req.headers['x-webhook-timestamp'];
+    const signature = req.headers['x-webhook-signature'];
+
+    if (!secret || !timestamp || !signature || !req.rawBody) {
+      return res.status(400).json({ error: 'Missing webhook signature data' });
+    }
+
+    const computed = crypto
+      .createHmac('sha256', secret)
+      .update(timestamp + req.rawBody)
+      .digest('base64');
+
+    if (computed !== signature) {
+      return res.status(401).json({ error: 'Invalid signature' });
+    }
+
+    const event = req.body;
+    const cfOrderId = event.data && event.data.order && event.data.order.order_id;
+    const paymentStatus = event.data && event.data.payment && event.data.payment.payment_status;
+
+    if (cfOrderId && paymentStatus === 'SUCCESS') {
+      const orderId = parseInt(String(cfOrderId).replace('zaraz_', ''), 10);
+      if (!Number.isNaN(orderId)) {
+        await markOrderPaid(orderId);
+        console.log(`✅ Webhook: order ${orderId} marked as Paid`);
+      }
+    }
+
+    res.json({ received: true });
+  } catch (err) {
+    console.error('Cashfree webhook error:', err);
+    res.status(500).json({ error: 'Webhook error' });
   }
 });
 

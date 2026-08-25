@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -144,7 +145,7 @@
     // read either the buy-now set or the whole cart (if both, prefer buy-now)
     const items = checkoutItems.length > 0 ? checkoutItems : cart;
 
-    let paymentMethod = 'placeholder';
+    let paymentMethod = 'cashfree';
 
     function cartSummary() {
       return cart.reduce((s, i) => s + i.quantity, 0);
@@ -230,28 +231,21 @@
               <h2>Payment Method</h2>
               <div class="payment-methods">
                 <label class="method selected">
-                  <input type="radio" name="pay" value="placeholder" checked>
+                  <input type="radio" name="pay" value="cashfree" checked>
                   <span>
-                    <span class="method-title">Dummy / Offline</span>
-                    <span class="method-desc">Instant order for testing (placeholder until the real gateway goes live)</span>
+                    <span class="method-title">Online Payment</span>
+                    <span class="method-desc">UPI, Cards, NetBanking &amp; Wallets — secure checkout by Cashfree</span>
                   </span>
                 </label>
-                <label class="method disabled" style="opacity: 0.5; cursor: not-allowed">
-                  <input type="radio" name="pay" value="card" disabled>
+                <label class="method">
+                  <input type="radio" name="pay" value="offline">
                   <span>
-                    <span class="method-title">Card (Coming soon)</span>
-                    <span class="method-desc">Stripe / Razorpay will be wired in here — the flow above won't change</span>
-                  </span>
-                </label>
-                <label class="method disabled" style="opacity: 0.5; cursor: not-allowed">
-                  <input type="radio" name="pay" value="upi" disabled>
-                  <span>
-                    <span class="method-title">UPI (Coming soon)</span>
-                    <span class="method-desc">After the placeholder completes, the gateway hooks into <code>paymentMethod</code>/<code>paymentStatus</code></span>
+                    <span class="method-title">Cash on Delivery / Offline</span>
+                    <span class="method-desc">Place the order now, pay later</span>
                   </span>
                 </label>
               </div>
-              <div class="secondary-note">When the real gateway is live, the order is created only after payment succeeds. For now we simulate success with a placeholder.</div>
+              <div class="secondary-note">Online payments are processed securely by Cashfree. Your order is confirmed once payment succeeds.</div>
 
               <button class="btn" id="placeBtn">Place Order – ₹${total}</button>
               <div id="error" class="error"></div>
@@ -330,16 +324,7 @@
         paymentMethod
       };
 
-      try {
-        const res = await fetch(`${API_URL}/orders`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Order failed');
-
-        // clear whichever source we used
+      function clearPurchasedItems() {
         if (checkoutItems.length > 0) {
           sessionStorage.removeItem('zaraz_checkout_items');
           // remove purchased items out of the bag (Buy Now mutates bag only on success)
@@ -348,16 +333,93 @@
         } else {
           localStorage.setItem('zaraz_cart', '[]');
         }
+      }
 
+      function showSuccess(orderId) {
         document.getElementById('checkout').innerHTML = `
           <div class="success-wrap">
             <h1>Order placed successfully!</h1>
-            <p>Order #${data.orderId} · Total ₹${total}</p>
+            <p>Order #${orderId} · Total ₹${total}</p>
             <p>${user.name}, thank you for shopping with us.</p>
             <button class="btn" style="max-width: 300px;" onclick="location.href='orders.html'">Track your order</button>
           </div>`;
+      }
+
+      try {
+        if (paymentMethod === 'cashfree') {
+          await payWithCashfree(payload, btn, errorEl, clearPurchasedItems, showSuccess);
+          return;
+        }
+
+        const res = await fetch(`${API_URL}/orders`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Order failed');
+
+        clearPurchasedItems();
+        showSuccess(data.orderId);
       } catch (err) {
         errorEl.textContent = err.message;
+        btn.disabled = false;
+        btn.textContent = 'Place Order';
+      }
+    }
+
+    async function payWithCashfree(payload, btn, errorEl, clearPurchasedItems, showSuccess) {
+      // 1. Create the order + Cashfree payment session on the server
+      const res = await fetch(`${API_URL}/payments/cashfree/create-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not initiate payment');
+
+      // 2. Open the Cashfree checkout modal
+      const cashfree = Cashfree({ mode: data.mode || 'sandbox' });
+      btn.textContent = 'Waiting for payment…';
+      const result = await cashfree.checkout({
+        paymentSessionId: data.paymentSessionId,
+        redirectTarget: '_modal'
+      });
+
+      const verifyOnce = async () => {
+        const vRes = await fetch(`${API_URL}/payments/cashfree/verify/${data.orderId}`);
+        const vData = await vRes.json();
+        if (!vRes.ok) throw new Error(vData.error || 'Could not verify payment');
+        return vData.status;
+      };
+
+      // 3. Modal closed — confirm the payment server-side before showing success
+      let status;
+      if (result.error) {
+        // User dismissed the modal or the payment failed — do a single check in case money still went through
+        status = await verifyOnce();
+        if (status !== 'PAID') {
+          errorEl.textContent = 'Payment was not completed. Your order is saved — you can place it again to retry.';
+          btn.disabled = false;
+          btn.textContent = 'Place Order';
+          return;
+        }
+      } else {
+        btn.textContent = 'Confirming payment…';
+        status = 'PENDING';
+        for (let attempt = 0; attempt < 5 && status === 'PENDING'; attempt++) {
+          status = await verifyOnce();
+          if (status === 'PENDING') await new Promise(r => setTimeout(r, 2000));
+        }
+      }
+
+      if (status === 'PAID') {
+        clearPurchasedItems();
+        showSuccess(data.orderId);
+      } else {
+        errorEl.textContent = status === 'FAILED'
+          ? 'Payment failed. No money was captured — please try again.'
+          : 'Payment is not confirmed yet. If money was deducted, it will reflect on your order shortly.';
         btn.disabled = false;
         btn.textContent = 'Place Order';
       }
