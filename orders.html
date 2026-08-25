@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders | LaSutra Boutique</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --accent: #e0455c;
+      --bg: #faf7f4;
+      --surface: #ffffff;
+      --ink: #1d1d23;
+      --ink-soft: #6b6b71;
+      --border: #ece4df;
+      --success: #2e7d5b;
+    }
+
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); }
+
+    .header {
+      background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 40px; display: flex; justify-content: space-between; align-items: center;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.6rem; color: var(--accent); text-decoration: none; }
+    .nav { display: flex; gap: 30px; }
+    .nav a { color: var(--ink-soft); text-decoration: none; font-size: 0.95rem; }
+    .nav a:hover, .nav a.active { color: var(--ink); }
+
+    .main-content { max-width: 1100px; margin: 0 auto; padding: 40px 20px; }
+    .page-header { margin-bottom: 28px; }
+    .page-header h1 { font-family: 'Playfair Display', serif; font-size: 2.4rem; }
+    .page-header p { color: var(--ink-soft); }
+
+    /* Order list */
+    .orders-grid { display: flex; flex-direction: column; gap: 18px; }
+    .order-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 22px;
+      cursor: pointer; transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .order-card:hover { box-shadow: 0 10px 24px rgba(29,29,35,0.08); transform: translateY(-2px); }
+    .order-head { display: flex; justify-content: space-between; align-items: start; margin-bottom: 14px; }
+    .order-id { font-weight: 700; font-size: 1.05rem; }
+    .order-date { color: var(--ink-soft); font-size: 0.85rem; margin-top: 3px; }
+    .order-amount { font-weight: 700; }
+    .order-preview { color: var(--ink-soft); font-size: 0.92rem; }
+    .order-status {
+      display: inline-block; padding: 6px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.4px;
+    }
+    .status-placed { background: rgba(224,69,92,0.1); color: #c9394e; }
+    .status-processing { background: rgba(230,81,0,0.1); color: #e65100; }
+    .status-shipped { background: rgba(21,101,192,0.1); color: #1565c0; }
+    .status-out-for-delivery { background: rgba(21,101,192,0.15); color: #1565c0; }
+    .status-delivered { background: rgba(46,125,91,0.1); color: var(--success); }
+    .status-cancelled,
+    .status-payment-failed,
+    .status-returned-refunded { background: rgba(211,47,47,0.1); color: #d32f2f; }
+
+    .order-detail { display: none; }
+    .order-detail.open { display: block; }
+    .back-btn { background: none; border: none; color: var(--ink-soft); font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-bottom: 18px; }
+    .back-btn:hover { color: var(--ink); }
+
+    /* Timeline stepper */
+    .timeline { display: flex; justify-content: space-between; margin: 20px 0; position: relative; }
+    .timeline::before { content: ''; position: absolute; top: 14px; left: 0; right: 0; height: 2px; background: var(--border); z-index: 0; }
+    .step { flex: 1; text-align: center; position: relative; z-index: 1; }
+    .step::before {
+      content: ''; display: block; width: 20px; height: 20px; border-radius: 50%; border: 3px solid #cfc6c0;
+      background: #fff; margin: 0 auto 8px;
+    }
+    .step.done::before { border-color: var(--accent); background: var(--accent); }
+    .step.current::before { border-color: var(--accent); background: #fff; box-shadow: 0 0 0 3px rgba(224,69,92,0.2); }
+    .step-label { font-size: 0.72rem; font-weight: 600; color: var(--ink-soft); }
+    .step.done .step-label, .step.current .step-label { color: var(--ink); }
+
+    .blocked { color: #d32f2f; background: rgba(211,47,47,0.08); border-radius: 12px; padding: 16px; margin: 16px 0; }
+
+    .detail-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 24px; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 24px; margin-bottom: 20px; }
+    .detail-col h3 { font-family: 'Playfair Display', serif; font-size: 1rem; margin-bottom: 10px; }
+    .address-line { color: var(--ink-soft); font-size: 0.92rem; line-height: 1.6; }
+    .history { margin-top: 16px; }
+    .history-item { display: flex; justify-content: space-between; padding: 5px 0; font-size: 0.88rem; color: var(--ink-soft); }
+    .history-item strong { color: var(--ink); }
+
+    .items-list { display: flex; flex-direction: column; }
+    .item { display: flex; align-items: center; gap: 12px; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .item img { width: 56px; height: 64px; object-fit: cover; border-radius: 8px; }
+    .item:last-child { border-bottom: none; }
+    .item-name { font-weight: 600; }
+    .item-qty { color: var(--ink-soft); font-size: 0.84rem; }
+    .item-total { font-weight: 700; }
+
+    .summary { display: flex; flex-direction: column; gap: 4px; margin-top: 16px; }
+    .summary-line { display: flex; justify-content: space-between; font-size: 0.92rem; }
+    .summary-line.ship { color: var(--ink-soft); }
+    .summary-line.total { font-weight: 700; font-size: 1.05rem; border-top: 1px dashed var(--border); padding-top: 10px; }
+    .muted { color: var(--ink-soft); }
+
+    .empty, .loading { text-align: center; padding: 60px 20px; color: var(--ink-soft); }
+    .empty h2 { font-family: 'Playfair Display', serif; margin-bottom: 8px; }
+    .empty a { color: var(--accent); font-weight: 600; }
+
+    @media (max-width: 800px) {
+      .detail-grid { grid-template-columns: 1fr; }
+      .timeline { flex-direction: column; gap: 12px; }
+      .timeline::before { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <a href="index.html" class="logo">LaSutra</a>
+    <nav class="nav">
+      <a href="index.html">Home</a>
+      <a href="index.html#products">Shop</a>
+      <a href="orders.html" class="active">My Orders</a>
+    </nav>
+    <div id="headerActions"></div>
+  </header>
+
+  <main class="main-content">
+    <div id="ordersList">
+      <div class="page-header">
+        <h1>My Orders</h1>
+        <p>Track and manage your orders</p>
+      </div>
+      <div id="ordersContainer" class="orders-grid">
+        <div class="loading">Loading your orders…</div>
+      </div>
+    </div>
+    <div id="orderDetail" class="order-detail"></div>
+  </main>
+
+  <script>
+    const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1']);
+    const API_URL = LOCAL_HOSTS.has(location.hostname) ? 'http://localhost:3000/api' : location.origin + '/api';
+    let user = JSON.parse(localStorage.getItem('lasutra_user') || 'null');
+    const TIMELINE = ['Placed', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered'];
+    const BLOCKED = ['Cancelled', 'Payment Failed', 'Returned', 'Refunded'];
+
+    // Stale session guard (e.g. DB reset): bounce to login if the stored id no longer exists
+    async function validateUser() {
+      if (!user) return;
+      try {
+        const res = await fetch(`${API_URL}/users/${user.id}`);
+        if (res.status === 404 || res.status === 400) {
+          localStorage.removeItem('lasutra_user');
+          user = null;
+        }
+      } catch (_) { }
+    }
+
+    function header() {
+      const el = document.getElementById('headerActions');
+      if (user) {
+        el.innerHTML = `<span style="font-weight:600;font-size:0.95rem;">${user.name || ''}</span><button onclick="logout()" style="background:var(--accent);color:#fff;border:none;padding:8px 14px;border-radius:10px;font-weight:700;cursor:pointer;margin-left:10px;">Logout</button>`;
+      } else {
+        el.innerHTML = '<button onclick="location.href=\'index.html\'" style="background:var(--accent);color:#fff;border:none;padding:8px 14px;border-radius:10px;font-weight:700;cursor:pointer;">Login</button>';
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('lasutra_user');
+      location.href = 'index.html';
+    }
+
+    function statusCls(s) {
+      const map = { 'Placed':'status-placed', 'Processing':'status-processing', 'Shipped':'status-shipped', 'Out for Delivery':'status-out-for-delivery', 'Delivered':'status-delivered' };
+      return map[s] || 'status-payment-failed';
+    }
+
+    async function init() {
+      await validateUser();
+      header();
+      if (!user) {
+        document.getElementById('ordersContainer').innerHTML = '<div class="empty"><h2>Please Login</h2><p>You need to be logged in to view your orders.</p><a href="index.html">Go to Shop</a></div>';
+        return;
+      }
+
+      document.getElementById('ordersList').style.display = 'block';
+      document.getElementById('orderDetail').classList.remove('open');
+      const container = document.getElementById('ordersContainer');
+
+      try {
+        const res = await fetch(`${API_URL}/orders/${user.id}`);
+        if (!res.ok) throw new Error();
+        const orders = await res.json();
+
+        if (!orders || orders.length === 0) {
+          container.innerHTML = '<div class="empty"><h2>No Orders Yet</h2><p>You haven\'t placed any orders yet.</p><a href="index.html#products">Start Shopping</a></div>';
+          return;
+        }
+
+        container.innerHTML = orders.map(o => `
+          <div class="order-card" onclick="openOrder(${o.id})">
+            <div class="order-head">
+              <div>
+                <div class="order-id">Order #${o.id}</div>
+                <div class="order-date">${new Date(o.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' })}</div>
+              </div>
+              <div style="text-align:right;">
+                <div class="order-amount">₹${parseFloat(o.total_amount).toFixed(2)}</div>
+                <span class="order-status ${statusCls(o.status)}">${o.status}</span>
+              </div>
+            </div>
+            <div class="order-preview">${o.items.length} item${o.items.length !== 1 ? 's' : ''} · Payment: ${o.payment_status || 'Pending'}</div>
+          </div>
+        `).join('');
+      } catch (e) {
+        container.innerHTML = '<div class="empty">Failed to load orders. Please try again.</div>';
+      }
+    }
+
+    async function openOrder(id) {
+      try {
+        const res = await fetch(`${API_URL}/orders/${user.id}/${id}`);
+        if (!res.ok) throw new Error();
+        const o = await res.json();
+
+        document.getElementById('ordersList').style.display = 'none';
+        const detail = document.getElementById('orderDetail');
+        detail.classList.add('open');
+
+        const isBlocked = BLOCKED.includes(o.status);
+        let stepIndex = 0;
+        if (!isBlocked) {
+          (o.history || []).forEach(h => {
+            const idx = TIMELINE.indexOf(h.status);
+            if (idx > stepIndex) stepIndex = idx;
+          });
+          const curIdx = TIMELINE.indexOf(o.status);
+          if (curIdx > stepIndex) stepIndex = curIdx;
+        }
+
+        const timelineBtn = !isBlocked ? `
+          <div class="timeline">
+            ${TIMELINE.map((s, i) => `
+              <div class="step ${i < stepIndex ? 'done' : (i === stepIndex ? 'current' : '')}">
+                <div class="step-label">${s}</div>
+              </div>`).join('')}
+          </div>` : `
+          <div class="blocked">Status: ${o.status}</div>`;
+
+        const a = o.shipping_address || {};
+        const addressHtml = a ? [a.fullName, a.house, a.street, a.landmark, a.city, a.state, a.pinCode, a.country, a.phone && `Phone: ${a.phone}`].filter(Boolean).join(', ') : 'Not recorded';
+
+        const subtotal = (o.items || []).reduce((s, i) => s + i.product_price * i.quantity, 0);
+        const shipping = subtotal > 3000 ? 0 : 99;
+        const discount = Math.round(subtotal * 0.05);
+
+        detail.innerHTML = `
+          <button class="back-btn" onclick="init()">← Back to orders</button>
+          <div class="detail-card">
+            <div class="order-head">
+              <div>
+                <div class="order-id">Order #${o.id}</div>
+                <div class="order-date">${new Date(o.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' })}</div>
+              </div>
+              <span class="order-status ${statusCls(o.status)}">${o.status}</span>
+            </div>
+            ${timelineBtn}
+            <div class="detail-grid">
+              <div class="detail-col">
+                <h3>Delivery Address</h3>
+                <p class="address-line">${addressHtml}</p>
+                <h3 style="margin-top:16px">Payment</h3>
+                <p class="address-line">${o.payment_method || 'N/A'} — ${o.payment_status || 'Pending'}</p>
+                <div class="history">
+                  <h3>Status History</h3>
+                  ${(o.history || []).map(h => `
+                    <div class="history-item">
+                      <strong>${h.status}</strong>
+                      <span>${new Date(h.changed_at).toLocaleString('en-IN', { dateStyle:'short', timeStyle:'short' })}</span>
+                    </div>`).join('')}
+                </div>
+              </div>
+              <div class="detail-col">
+                <h3>Items</h3>
+                <div class="items-list">
+                  ${(o.items || []).map(i => `
+                    <div class="item">
+                      <img src="${(i.image || '') }" alt="${i.product_name}">
+                      <div style="flex:1">
+                        <div class="item-name">${i.product_name}</div>
+                        <div class="item-qty">Qty: ${i.quantity}</div>
+                      </div>
+                      <div class="item-total">₹${(i.product_price * i.quantity).toFixed(2)}</div>
+                    </div>
+                  `).join('')}
+                </div>
+                <div class="summary">
+                  <div class="summary-line"><span class="muted">Subtotal</span><span>₹${subtotal.toFixed(2)}</span></div>
+                  <div class="summary-line ship"><span>Shipping</span><span>${shipping === 0 ? 'FREE' : '₹' + shipping}</span></div>
+                  <div class="summary-line"><span>Discount (5%)</span><span>−₹${discount.toFixed(2)}</span></div>
+                  <div class="summary-line total"><span>Total</span><span>₹${parseFloat(o.total_amount).toFixed(2)}</span></div>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      } catch (e) {
+        alert('Could not load this order. Please try again.');
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
