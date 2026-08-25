@@ -8,10 +8,64 @@ const crypto = require('crypto');
 const { pool, initDatabase } = require('./db');
 const { sendOrderConfirmation, sendAdminNotification, sendStatusUpdateEmail, sendContactMessage } = require('./emailService');
 
-// Rate limiting for auth endpoints
+// ============ SESSION TOKENS (HMAC-signed, no server storage) ============
+// Format: base64url(JSON payload).signature  — payload carries id/role + expiry
+const SESSION_SECRET = process.env.SESSION_SECRET || process.env.ADMIN_PASSWORD || process.env.CASHFREE_SECRET_KEY || 'dev-insecure-secret';
+if (!process.env.SESSION_SECRET && process.env.NODE_ENV === 'production') {
+  console.warn('⚠  SESSION_SECRET is not set — set a strong random value in .env for production');
+}
+const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+function b64url(buf) { return Buffer.from(buf).toString('base64url'); }
+function signData(data) { return crypto.createHmac('sha256', SESSION_SECRET).update(data).digest('base64url'); }
+
+function createToken(payload) {
+  const body = b64url(JSON.stringify({ ...payload, exp: Date.now() + SESSION_TTL_MS }));
+  return `${body}.${signData(body)}`;
+}
+
+function verifyToken(token) {
+  if (typeof token !== 'string') return null;
+  const [body, sig] = token.split('.');
+  if (!body || !sig) return null;
+  const expected = signData(body);
+  const a = Buffer.from(sig), b = Buffer.from(expected);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  let payload;
+  try { payload = JSON.parse(Buffer.from(body, 'base64url').toString()); } catch { return null; }
+  if (!payload.exp || payload.exp < Date.now()) return null;
+  return payload;
+}
+
+function getToken(req) {
+  const h = req.headers.authorization || '';
+  return h.startsWith('Bearer ') ? h.slice(7) : null;
+}
+
+// Require a valid user session; sets req.auth
+function requireUser(req, res, next) {
+  const payload = verifyToken(getToken(req));
+  if (!payload || payload.role !== 'user') {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  req.auth = payload;
+  next();
+}
+
+// Require a valid admin session; sets req.auth
+function requireAdmin(req, res, next) {
+  const payload = verifyToken(getToken(req));
+  if (!payload || payload.role !== 'admin') {
+    return res.status(401).json({ error: 'Admin authentication required' });
+  }
+  req.auth = payload;
+  next();
+}
+
+// ============ RATE LIMITING ============
 const rateLimit = new Map();
 const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
-const MAX_ATTEMPTS = 5;
+const MAX_ATTEMPTS = 10;
 
 function checkRateLimit(key) {
   const now = Date.now();
@@ -30,16 +84,42 @@ function checkRateLimit(key) {
   return true;
 }
 
+// Periodically purge expired rate-limit entries so the map doesn't grow unbounded
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of rateLimit) {
+    if (now - v.windowStart > RATE_LIMIT_WINDOW) rateLimit.delete(k);
+  }
+}, RATE_LIMIT_WINDOW).unref();
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Order stage constants used across the API
 const ORDER_STATUSES = ['Placed', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled', 'Payment Failed', 'Returned', 'Refunded'];
 
-// Middleware
-app.use(cors());
+// Security headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('X-XSS-Protection', '0');
+  next();
+});
+
+// CORS: allow same-origin/local tools plus the configured storefront origin(s)
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000,http://localhost:8899,http://127.0.0.1:8899')
+  .split(',').map(s => s.trim()).filter(Boolean);
+app.use(cors({
+  origin(origin, cb) {
+    if (!origin) return cb(null, true); // same-origin fetch, curl, server-to-server, webhooks
+    cb(null, allowedOrigins.includes(origin));
+  },
+  credentials: false
+}));
+
 // Capture raw request body too — Cashfree webhook signature is computed over the raw bytes
-app.use(express.json({ verify: (req, res, buf) => { req.rawBody = buf.toString(); } }));
+app.use(express.json({ limit: '1mb', verify: (req, res, buf) => { req.rawBody = buf.toString(); } }));
 
 // Serve uploaded product images
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -71,6 +151,11 @@ initDatabase();
 // Register new user
 app.post('/api/auth/register', async (req, res) => {
   try {
+    const clientIP = req.ip || req.socket.remoteAddress;
+    if (!checkRateLimit(`register:${clientIP}`)) {
+      return res.status(429).json({ error: 'Too many attempts. Try again later.' });
+    }
+
     const { name, email, password, country, state, pinCode } = req.body;
     
     // Validate input
@@ -111,9 +196,10 @@ app.post('/api/auth/register', async (req, res) => {
     const user = result.rows[0];
     res.status(201).json({
       message: 'User created successfully',
-      user: { 
-        id: user.id, 
-        name: user.name, 
+      token: createToken({ role: 'user', id: user.id }),
+      user: {
+        id: user.id,
+        name: user.name,
         email: user.email,
         country: user.country,
         state: user.state,
@@ -129,8 +215,13 @@ app.post('/api/auth/register', async (req, res) => {
 // Login user
 app.post('/api/auth/login', async (req, res) => {
   try {
+    const clientIP = req.ip || req.socket.remoteAddress;
+    if (!checkRateLimit(`login:${clientIP}`)) {
+      return res.status(429).json({ error: 'Too many attempts. Try again later.' });
+    }
+
     const { email, password } = req.body;
-    
+
     // Validate input
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
@@ -157,9 +248,10 @@ app.post('/api/auth/login', async (req, res) => {
     // Return user without password (including address)
     res.json({
       message: 'Login successful',
-      user: { 
-        id: user.id, 
-        name: user.name, 
+      token: createToken({ role: 'user', id: user.id }),
+      user: {
+        id: user.id,
+        name: user.name,
         email: user.email,
         country: user.country,
         state: user.state,
@@ -172,10 +264,13 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Get user by ID
-app.get('/api/users/:id', async (req, res) => {
+// Get user by ID (only the authenticated user themself)
+app.get('/api/users/:id', requireUser, async (req, res) => {
   try {
     const { id } = req.params;
+    if (String(req.auth.id) !== String(id)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
     
     const result = await pool.query(
       'SELECT id, name, email, country, state, pin_code, created_at FROM users WHERE id = $1',
@@ -202,10 +297,13 @@ app.get('/api/users/:id', async (req, res) => {
   }
 });
 
-// Update user address
-app.put('/api/users/:id/address', async (req, res) => {
+// Update user address (only the authenticated user themself)
+app.put('/api/users/:id/address', requireUser, async (req, res) => {
   try {
     const { id } = req.params;
+    if (String(req.auth.id) !== String(id)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
     const { country, state, pinCode } = req.body;
     
     const result = await pool.query(
@@ -328,15 +426,16 @@ async function markOrderPaid(orderId) {
   }
 }
 
-// Create Cashfree order for online payment
-app.post('/api/payments/cashfree/create-order', async (req, res) => {
+// Create Cashfree order for online payment (user id taken from the authenticated session)
+app.post('/api/payments/cashfree/create-order', requireUser, async (req, res) => {
   try {
     if (!cashfreeConfigured()) {
       return res.status(503).json({ error: 'Online payments are not configured yet' });
     }
 
-    const { userId, items, address } = req.body;
-    if (!userId || !items || items.length === 0) {
+    const userId = req.auth.id;
+    const { items, address } = req.body;
+    if (!items || items.length === 0) {
       return res.status(400).json({ error: 'Invalid order data' });
     }
 
@@ -411,14 +510,14 @@ app.post('/api/payments/cashfree/create-order', async (req, res) => {
 
 // Create a fresh payment session for an existing unpaid order ("Complete Payment" on orders page).
 // Cashfree order ids can't be reused after a payment attempt, so each retry gets a new one.
-app.post('/api/payments/cashfree/repay/:orderId', async (req, res) => {
+app.post('/api/payments/cashfree/repay/:orderId', requireUser, async (req, res) => {
   try {
     if (!cashfreeConfigured()) {
       return res.status(503).json({ error: 'Online payments are not configured yet' });
     }
 
     const orderId = req.params.orderId;
-    const { userId } = req.body;
+    const userId = req.auth.id;
 
     const orderResult = await pool.query(
       `SELECT o.id, o.user_id, o.total_amount, o.status, o.payment_method, o.payment_status, o.cf_order_id,
@@ -488,17 +587,20 @@ app.post('/api/payments/cashfree/repay/:orderId', async (req, res) => {
 });
 
 // Verify payment after the checkout modal closes (client-driven confirmation)
-app.get('/api/payments/cashfree/verify/:orderId', async (req, res) => {
+app.get('/api/payments/cashfree/verify/:orderId', requireUser, async (req, res) => {
   try {
     if (!cashfreeConfigured()) {
       return res.status(503).json({ error: 'Online payments are not configured yet' });
     }
 
     const orderId = req.params.orderId;
-    const orderResult = await pool.query('SELECT cf_order_id, payment_status FROM orders WHERE id = $1', [orderId]);
+    const orderResult = await pool.query('SELECT user_id, cf_order_id, payment_status FROM orders WHERE id = $1', [orderId]);
     const order = orderResult.rows[0];
     if (!order || !order.cf_order_id) {
       return res.status(404).json({ error: 'Order not found' });
+    }
+    if (String(order.user_id) !== String(req.auth.id)) {
+      return res.status(403).json({ error: 'Forbidden' });
     }
 
     if (order.payment_status === 'Paid') {
@@ -567,15 +669,19 @@ app.post('/api/webhooks/cashfree', async (req, res) => {
 
 // ============ ORDER ROUTES ============
 
-// Create order
-app.post('/api/orders', async (req, res) => {
+// Create order (offline/COD). User id comes from the authenticated session and the
+// total is recomputed from DB prices — never trust amounts sent by the client.
+app.post('/api/orders', requireUser, async (req, res) => {
   try {
-    const { userId, items, totalAmount, address, paymentMethod } = req.body;
-    
-    if (!userId || !items || items.length === 0) {
+    const userId = req.auth.id;
+    const { items, address, paymentMethod } = req.body;
+
+    if (!items || items.length === 0) {
       return res.status(400).json({ error: 'Invalid order data' });
     }
-    
+
+    const { total, lineItems } = await computeOrderTotal(items);
+
     const client = await pool.connect();
     
     try {
@@ -610,41 +716,41 @@ app.post('/api/orders', async (req, res) => {
       // Create order with payment placeholder and full address snapshot
       const orderResult = await client.query(
         'INSERT INTO orders (user_id, total_amount, status, payment_method, payment_status, shipping_address) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
-        [userId, totalAmount, 'Placed', paymentMethod || 'Offline Placeholder', 'Pending', shippingAddress ? JSON.stringify(shippingAddress) : null]
+        [userId, total, 'Placed', paymentMethod || 'Offline Placeholder', 'Pending', shippingAddress ? JSON.stringify(shippingAddress) : null]
       );
-      
+
       const orderId = orderResult.rows[0].id;
-      
+
       // Record the first status entry for the timeline
       await client.query(
         'INSERT INTO order_status_history (order_id, status) VALUES ($1, $2)',
         [orderId, 'Placed']
       );
-      
+
       // Add order items
-      for (const item of items) {
+      for (const item of lineItems) {
         await client.query(
           'INSERT INTO order_items (order_id, product_id, product_name, product_price, quantity) VALUES ($1, $2, $3, $4, $5)',
           [orderId, item.id, item.name, item.price, item.quantity]
         );
       }
-      
+
       await client.query('COMMIT');
-      
+
       // Send emails (async, don't wait)
       sendOrderConfirmation(
         { name: user.name, email: user.email },
         orderId,
-        items,
-        totalAmount,
+        lineItems,
+        total,
         shippingAddress || {}
       );
-      
+
       sendAdminNotification(
         { name: user.name, email: user.email },
         orderId,
-        items,
-        totalAmount,
+        lineItems,
+        total,
         shippingAddress || {}
       );
       
@@ -664,11 +770,14 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
-// Get user orders
-app.get('/api/orders/:userId', async (req, res) => {
+// Get user orders (only the authenticated user's own orders)
+app.get('/api/orders/:userId', requireUser, async (req, res) => {
   try {
     const { userId } = req.params;
-    
+    if (String(req.auth.id) !== String(userId)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
     const ordersResult = await pool.query(
       'SELECT id, total_amount, status, payment_method, payment_status, shipping_address, created_at FROM orders WHERE user_id = $1 ORDER BY created_at DESC',
       [userId]
@@ -693,22 +802,25 @@ app.get('/api/orders/:userId', async (req, res) => {
   }
 });
 
-// Get single order detail + status history (user must own the order)
-app.get('/api/orders/:userId/:orderId', async (req, res) => {
+// Get single order detail + status history (must be the authenticated user's own order)
+app.get('/api/orders/:userId/:orderId', requireUser, async (req, res) => {
   try {
     const { userId, orderId } = req.params;
-    
+    if (String(req.auth.id) !== String(userId)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
     const orderResult = await pool.query(
       'SELECT id, user_id, total_amount, status, payment_method, payment_status, shipping_address, created_at FROM orders WHERE id = $1',
       [orderId]
     );
-    
+
     if (orderResult.rows.length === 0) {
       return res.status(404).json({ error: 'Order not found' });
     }
-    
+
     const order = orderResult.rows[0];
-    if (parseInt(userId) !== order.user_id) {
+    if (String(req.auth.id) !== String(order.user_id)) {
       return res.status(403).json({ error: 'Forbidden' });
     }
     
@@ -768,9 +880,10 @@ app.post('/api/admin/login', async (req, res) => {
     
     // Clear rate limit on successful login
     rateLimit.delete(`admin:${clientIP}`);
-    
+
     res.json({
       message: 'Admin login successful',
+      token: createToken({ role: 'admin', id: admin.id }),
       admin: { id: admin.id, name: admin.name, email: admin.email }
     });
   } catch (err) {
@@ -780,7 +893,7 @@ app.post('/api/admin/login', async (req, res) => {
 });
 
 // Get all orders (admin only)
-app.get('/api/admin/orders', async (req, res) => {
+app.get('/api/admin/orders', requireAdmin, async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT 
@@ -812,7 +925,7 @@ app.get('/api/admin/orders', async (req, res) => {
 });
 
 // Update order status (admin only)
-app.put('/api/admin/orders/:id/status', async (req, res) => {
+app.put('/api/admin/orders/:id/status', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
@@ -959,7 +1072,7 @@ app.get('/api/products/:id', async (req, res) => {
 });
 
 // Admin: create product
-app.post('/api/admin/products', async (req, res) => {
+app.post('/api/admin/products', requireAdmin, async (req, res) => {
   try {
     const { name, categoryId, price, image, description, stock } = req.body;
 
@@ -985,7 +1098,7 @@ app.post('/api/admin/products', async (req, res) => {
 });
 
 // Admin: update product
-app.put('/api/admin/products/:id', async (req, res) => {
+app.put('/api/admin/products/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { name, categoryId, price, image, description, stock } = req.body;
@@ -1016,7 +1129,7 @@ app.put('/api/admin/products/:id', async (req, res) => {
 });
 
 // Admin: delete product
-app.delete('/api/admin/products/:id', async (req, res) => {
+app.delete('/api/admin/products/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query('DELETE FROM products WHERE id = $1 RETURNING id', [id]);
@@ -1032,7 +1145,7 @@ app.delete('/api/admin/products/:id', async (req, res) => {
 });
 
 // Admin: create category (optionally under a parent → subcategory)
-app.post('/api/admin/categories', async (req, res) => {
+app.post('/api/admin/categories', requireAdmin, async (req, res) => {
   try {
     const { name, parentId } = req.body;
 
@@ -1070,7 +1183,7 @@ app.post('/api/admin/categories', async (req, res) => {
 });
 
 // Admin: delete category (products in it are kept, category set to null)
-app.delete('/api/admin/categories/:id', async (req, res) => {
+app.delete('/api/admin/categories/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const result = await pool.query('DELETE FROM categories WHERE id = $1 RETURNING id', [id]);
@@ -1086,7 +1199,7 @@ app.delete('/api/admin/categories/:id', async (req, res) => {
 });
 
 // Admin: upload a product image, returns its public URL
-app.post('/api/admin/upload', (req, res) => {
+app.post('/api/admin/upload', requireAdmin, (req, res) => {
   upload.single('image')(req, res, (err) => {
     if (err) {
       return res.status(400).json({ error: err.message || 'Upload failed' });
@@ -1094,8 +1207,10 @@ app.post('/api/admin/upload', (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: 'No image file provided' });
     }
-    const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-    res.status(201).json({ message: 'Image uploaded', imageUrl: url });
+    // Build the public URL from the trusted API base (never the spoofable Host header).
+    // In production set API_PUBLIC_URL to the public API origin, e.g. https://api.example.com
+    const base = (process.env.API_PUBLIC_URL || `${req.protocol}://localhost:${PORT}`).replace(/\/$/, '');
+    res.status(201).json({ message: 'Image uploaded', imageUrl: `${base}/uploads/${req.file.filename}` });
   });
 });
 

@@ -1744,8 +1744,8 @@
       if (!stored) return;
       currentUser = JSON.parse(stored);
       try {
-        const res = await fetch(`${API_URL}/users/${currentUser.id}`);
-        if (res.status === 404 || res.status === 400) {
+        const res = await fetch(`${API_URL}/users/${currentUser.id}`, { headers: authHeaders() });
+        if (res.status === 404 || res.status === 400 || res.status === 401) {
           currentUser = null;
           saveCurrentUser();
           return;
@@ -1760,7 +1760,14 @@
         localStorage.setItem('zaraz_user', JSON.stringify(currentUser));
       } else {
         localStorage.removeItem('zaraz_user');
+        localStorage.removeItem('zaraz_token');
       }
+    }
+
+    // Headers for authenticated API calls (session token from login/register)
+    function authHeaders() {
+      const token = localStorage.getItem('zaraz_token');
+      return token ? { 'Authorization': `Bearer ${token}` } : {};
     }
 
     // Update auth UI based on login state
@@ -1841,6 +1848,7 @@
         if (response.ok) {
           // Auto login after registration
           currentUser = data.user;
+          if (data.token) localStorage.setItem('zaraz_token', data.token);
           saveCurrentUser();
           updateAuthUI();
           return { success: true, message: data.message };
@@ -1866,6 +1874,7 @@
         
         if (response.ok) {
           currentUser = data.user;
+          if (data.token) localStorage.setItem('zaraz_token', data.token);
           saveCurrentUser();
           updateAuthUI();
           return { success: true, message: data.message };
@@ -1883,8 +1892,8 @@
       try {
         const response = await fetch(`${API_URL}/orders`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, items, totalAmount, address })
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify({ items, address, paymentMethod: 'offline' })
         });
         
         const data = await response.json();
@@ -1939,7 +1948,7 @@
       try {
         const response = await fetch(`${API_URL}/users/${userId}/address`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify({ country, state, pinCode })
         });
         

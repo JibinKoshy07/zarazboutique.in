@@ -153,13 +153,20 @@
     const TIMELINE = ['Placed', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered'];
     const BLOCKED = ['Cancelled', 'Payment Failed', 'Returned', 'Refunded'];
 
+    // Session token header for authenticated calls
+    function authHeaders() {
+      const token = localStorage.getItem('zaraz_token');
+      return token ? { 'Authorization': `Bearer ${token}` } : {};
+    }
+
     // Stale session guard (e.g. DB reset): bounce to login if the stored id no longer exists
     async function validateUser() {
       if (!user) return;
       try {
-        const res = await fetch(`${API_URL}/users/${user.id}`);
-        if (res.status === 404 || res.status === 400) {
+        const res = await fetch(`${API_URL}/users/${user.id}`, { headers: authHeaders() });
+        if (res.status === 404 || res.status === 400 || res.status === 401) {
           localStorage.removeItem('zaraz_user');
+          localStorage.removeItem('zaraz_token');
           user = null;
         }
       } catch (_) { }
@@ -197,8 +204,8 @@
         // Fresh payment session for the existing order
         const res = await fetch(`${API_URL}/payments/cashfree/repay/${orderId}`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user.id })
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          body: JSON.stringify({})
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Could not initiate payment');
@@ -209,7 +216,7 @@
         // Modal closed — confirm server-side, then refresh the list
         let status = 'PENDING';
         for (let attempt = 0; attempt < 5 && status === 'PENDING'; attempt++) {
-          const vRes = await fetch(`${API_URL}/payments/cashfree/verify/${orderId}`);
+          const vRes = await fetch(`${API_URL}/payments/cashfree/verify/${orderId}`, { headers: authHeaders() });
           const vData = await vRes.json();
           if (vRes.ok) status = vData.status;
           if (status === 'PENDING') await new Promise(r => setTimeout(r, 2000));
@@ -243,7 +250,7 @@
       const container = document.getElementById('ordersContainer');
 
       try {
-        const res = await fetch(`${API_URL}/orders/${user.id}`);
+        const res = await fetch(`${API_URL}/orders/${user.id}`, { headers: authHeaders() });
         if (!res.ok) throw new Error();
         const orders = await res.json();
 
@@ -275,7 +282,7 @@
 
     async function openOrder(id) {
       try {
-        const res = await fetch(`${API_URL}/orders/${user.id}/${id}`);
+        const res = await fetch(`${API_URL}/orders/${user.id}/${id}`, { headers: authHeaders() });
         if (!res.ok) throw new Error();
         const o = await res.json();
 

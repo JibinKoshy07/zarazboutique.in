@@ -130,13 +130,20 @@
     const checkoutItems = JSON.parse(sessionStorage.getItem('zaraz_checkout_items') || '[]');
     const cart = JSON.parse(localStorage.getItem('zaraz_cart') || '[]');
 
+    // Session token header for authenticated calls
+    function authHeaders() {
+      const token = localStorage.getItem('zaraz_token');
+      return token ? { 'Authorization': `Bearer ${token}` } : {};
+    }
+
     // Validate the stored user still exists; stale sessions (e.g. after a DB reset) get bounced to login
     async function validateUser() {
       if (!user) return;
       try {
-        const res = await fetch(`${API_URL}/users/${user.id}`);
-        if (res.status === 404 || res.status === 400) {
+        const res = await fetch(`${API_URL}/users/${user.id}`, { headers: authHeaders() });
+        if (res.status === 404 || res.status === 400 || res.status === 401) {
           localStorage.removeItem('zaraz_user');
+          localStorage.removeItem('zaraz_token');
           user = null;
         }
       } catch (_) { /* network hiccup — treat as still logged in */ }
@@ -316,10 +323,9 @@
         phone: document.getElementById('phone').value
       };
 
+      // Server identifies the user from the session token and recomputes the total.
       const payload = {
-        userId: user.id,
         items: items.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })),
-        totalAmount: total,
         address,
         paymentMethod
       };
@@ -353,7 +359,7 @@
 
         const res = await fetch(`${API_URL}/orders`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify(payload)
         });
         const data = await res.json();
@@ -372,7 +378,7 @@
       // 1. Create the order + Cashfree payment session on the server
       const res = await fetch(`${API_URL}/payments/cashfree/create-order`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(payload)
       });
       const data = await res.json();
@@ -387,7 +393,7 @@
       });
 
       const verifyOnce = async () => {
-        const vRes = await fetch(`${API_URL}/payments/cashfree/verify/${data.orderId}`);
+        const vRes = await fetch(`${API_URL}/payments/cashfree/verify/${data.orderId}`, { headers: authHeaders() });
         const vData = await vRes.json();
         if (!vRes.ok) throw new Error(vData.error || 'Could not verify payment');
         return vData.status;

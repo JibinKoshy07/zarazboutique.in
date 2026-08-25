@@ -956,6 +956,12 @@
     }
 
     // ============ AUTH ============
+    // Admin session token (from admin login) sent as a Bearer header on admin API calls
+    function adminHeaders() {
+      const token = localStorage.getItem('zaraz_admin_token');
+      return token ? { 'Authorization': `Bearer ${token}` } : {};
+    }
+
     const savedAdmin = localStorage.getItem('zaraz_admin');
     if (savedAdmin) {
       showAdminPanel();
@@ -979,6 +985,7 @@
 
         if (response.ok) {
           localStorage.setItem('zaraz_admin', JSON.stringify(data.admin));
+          if (data.token) localStorage.setItem('zaraz_admin_token', data.token);
           showAdminPanel();
           initDashboard();
         } else {
@@ -996,6 +1003,7 @@
 
     function logout() {
       localStorage.removeItem('zaraz_admin');
+      localStorage.removeItem('zaraz_admin_token');
       document.getElementById('loginPage').style.display = 'flex';
       document.getElementById('adminPanel').classList.remove('active');
     }
@@ -1147,7 +1155,7 @@
       const formData = new FormData();
       formData.append('image', file);
       try {
-        const response = await fetch(`${API_URL}/admin/upload`, { method: 'POST', body: formData });
+        const response = await fetch(`${API_URL}/admin/upload`, { method: 'POST', headers: adminHeaders(), body: formData });
         const data = await response.json();
         if (response.ok) {
           document.getElementById('productImage').value = data.imageUrl;
@@ -1181,7 +1189,7 @@
 
         const response = await fetch(url, {
           method,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...adminHeaders() },
           body: JSON.stringify(payload)
         });
 
@@ -1207,7 +1215,7 @@
     async function deleteProduct(id, name) {
       if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
       try {
-        const response = await fetch(`${API_URL}/admin/products/${id}`, { method: 'DELETE' });
+        const response = await fetch(`${API_URL}/admin/products/${id}`, { method: 'DELETE', headers: adminHeaders() });
         if (response.ok) {
           showToast('Product deleted');
           loadProducts();
@@ -1291,7 +1299,7 @@
       try {
         const response = await fetch(`${API_URL}/admin/categories`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...adminHeaders() },
           body: JSON.stringify({ name, parentId })
         });
 
@@ -1317,7 +1325,7 @@
         : '';
       if (!confirm(`Delete category "${name}"? Products in it will become uncategorized.${hint}`)) return;
       try {
-        const response = await fetch(`${API_URL}/admin/categories/${id}`, { method: 'DELETE' });
+        const response = await fetch(`${API_URL}/admin/categories/${id}`, { method: 'DELETE', headers: adminHeaders() });
         if (response.ok) {
           showToast('Category deleted');
           loadCategories();
@@ -1336,7 +1344,7 @@
       container.innerHTML = '<div class="loading">Loading orders...</div>';
 
       try {
-        const response = await fetch(`${API_URL}/admin/orders`);
+        const response = await fetch(`${API_URL}/admin/orders`, { headers: adminHeaders() });
         allOrders = await response.json();
       } catch (err) {
         container.innerHTML = '<div class="no-data">Failed to load orders</div>';
@@ -1507,7 +1515,7 @@
       try {
         const response = await fetch(`${API_URL}/admin/orders/${orderId}/status`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...adminHeaders() },
           body: JSON.stringify({ status })
         });
 
