@@ -11,6 +11,7 @@
 - **Cart persistence**: localStorage key `zaraz_cart`; index, product, checkout read it; `sessionStorage` key `zaraz_checkout_items` used for BUY NOW flow
 - **Order statuses (ORDER_STATUSES in server.js)**: `['Placed','Processing','Shipped','Out for Delivery','Delivered','Cancelled','Payment Failed','Returned','Refunded']`
 - **Status history**: stored in dedicated table `order_status_history` (separate from `orders`). PUT `/api/admin/orders/:id/status` appends a row. GET `/api/orders/:userId/:orderId` returns `history` (not `status_history`)
+- **Contact form**: `contact.html` POSTs to `/api/contact` → `sendContactMessage` in emailService.js. Recipient is env **`CONTACT_FORM_EMAIL`** (skipped gracefully if unset; SMTP_USER/SMTP_PASS must be set to actually send). Reply-To is the visitor's email
 - **Admin orders search/filter**: `/api/admin/orders?q=` and `?status=` query params; frontend filters client-side too via `.orders-toolbar`
 
 ## Admin

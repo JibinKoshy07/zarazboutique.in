@@ -5,7 +5,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { pool, initDatabase } = require('./db');
-const { sendOrderConfirmation, sendAdminNotification, sendStatusUpdateEmail } = require('./emailService');
+const { sendOrderConfirmation, sendAdminNotification, sendStatusUpdateEmail, sendContactMessage } = require('./emailService');
 
 // Rate limiting for auth endpoints
 const rateLimit = new Map();
@@ -229,6 +229,36 @@ app.put('/api/users/:id/address', async (req, res) => {
     });
   } catch (err) {
     console.error('Update address error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============ CONTACT ROUTE ============
+
+// Contact form submission (recipient configured via CONTACT_FORM_EMAIL env)
+app.post('/api/contact', async (req, res) => {
+  try {
+    const { name, email, phone, message } = req.body;
+
+    if (!name || !email || !message) {
+      return res.status(400).json({ error: 'Name, email and message are required' });
+    }
+
+    if (typeof name !== 'string' || name.length > 100 ||
+        typeof message !== 'string' || message.length > 5000 ||
+        (phone && (typeof phone !== 'string' || phone.length > 20))) {
+      return res.status(400).json({ error: 'Invalid input length' });
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
+      return res.status(400).json({ error: 'Invalid email address' });
+    }
+
+    const result = await sendContactMessage({ name: name.trim(), email: email.trim(), phone: phone && phone.trim(), message: message.trim() });
+
+    res.json({ success: true, message: 'Message sent successfully', emailSent: result.success });
+  } catch (err) {
+    console.error('Contact form error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });

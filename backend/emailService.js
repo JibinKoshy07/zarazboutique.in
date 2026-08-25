@@ -240,8 +240,83 @@ const sendStatusUpdateEmail = async (user, orderId, newStatus, items, totalAmoun
   }
 };
 
+// Send contact form message to the boutique (recipient set via CONTACT_FORM_EMAIL)
+const sendContactMessage = async ({ name, email, phone, message }) => {
+  try {
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      console.log('⚠️  SMTP not configured. Skipping email.');
+      return { success: false, message: 'SMTP not configured' };
+    }
+
+    const recipient = process.env.CONTACT_FORM_EMAIL;
+    if (!recipient) {
+      console.log('⚠️  CONTACT_FORM_EMAIL not set. Skipping contact form email.');
+      return { success: false, message: 'CONTACT_FORM_EMAIL not configured' };
+    }
+
+    const transporter = createTransporter();
+
+    const mailOptions = {
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      replyTo: email,
+      to: recipient,
+      subject: `📩 New Contact Message from ${name} | Zaraz Boutique`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: #1a1a2e; padding: 20px; text-align: center;">
+            <h1 style="color: #e94560; margin: 0;">Zaraz Boutique</h1>
+          </div>
+
+          <div style="padding: 30px; background: #f8f8f8;">
+            <h2 style="color: #1a1a2e; margin-top: 0;">New Contact Form Message</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; color: #555; width: 90px;"><strong>Name:</strong></td>
+                <td style="padding: 8px 0;">${escapeHtml(name)}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #555;"><strong>Email:</strong></td>
+                <td style="padding: 8px 0;"><a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a></td>
+              </tr>
+              ${phone ? `
+              <tr>
+                <td style="padding: 8px 0; color: #555;"><strong>Phone:</strong></td>
+                <td style="padding: 8px 0;">${escapeHtml(phone)}</td>
+              </tr>` : ''}
+            </table>
+            <div style="margin-top: 20px; padding: 20px; background: white; border-left: 4px solid #e94560;">
+              <p style="margin: 0; color: #555;"><strong>Message:</strong></p>
+              <p style="margin: 10px 0 0; white-space: pre-wrap;">${escapeHtml(message)}</p>
+            </div>
+            <p style="color: #777; font-size: 13px; margin-top: 20px;">Reply directly to this email to respond to ${escapeHtml(name)}.</p>
+          </div>
+
+          <div style="background: #1a1a2e; padding: 20px; text-align: center; color: white;">
+            <p style="margin: 0;">&copy; 2024 Zaraz Boutique. All rights reserved.</p>
+          </div>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Contact form email sent to ${recipient} (from ${email})`);
+    return { success: true };
+  } catch (err) {
+    console.error('❌ Error sending contact form email:', err.message);
+    return { success: false, message: err.message };
+  }
+};
+
+const escapeHtml = (str = '') => String(str)
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
 module.exports = {
   sendOrderConfirmation,
   sendAdminNotification,
-  sendStatusUpdateEmail
+  sendStatusUpdateEmail,
+  sendContactMessage
 };
