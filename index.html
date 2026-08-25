@@ -166,10 +166,13 @@
     .hero-bg {
       position: absolute;
       inset: 0;
-      background: 
-        radial-gradient(ellipse at 20% 80%, rgba(233, 69, 96, 0.15) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 20%, rgba(29, 29, 35, 0.05) 0%, transparent 50%),
-        radial-gradient(ellipse at 50% 50%, rgba(233, 69, 96, 0.06) 0%, transparent 70%);
+      background: #faf7f4 url('banner.png') center / cover no-repeat;
+    }
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(29, 29, 35, 0.15) 0%, rgba(29, 29, 35, 0.45) 100%);
     }
 
     .hero-shapes {
@@ -229,16 +232,20 @@
       margin-bottom: 24px;
       opacity: 0;
       animation: fadeUp 1s ease forwards 0.3s;
+      color: #ffffff;
+      text-shadow: 0 2px 20px rgba(29, 29, 35, 0.45);
     }
 
     .hero h1 span {
       color: var(--accent);
       font-style: italic;
+      text-shadow: 0 2px 20px rgba(29, 29, 35, 0.45);
     }
 
     .hero p {
       font-size: 1.25rem;
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.92);
+      text-shadow: 0 1px 12px rgba(29, 29, 35, 0.4);
       margin-bottom: 40px;
       opacity: 0;
       animation: fadeUp 1s ease forwards 0.5s;
@@ -1226,11 +1233,7 @@
   <!-- Hero Section -->
   <section class="hero">
     <div class="hero-bg"></div>
-    <div class="hero-shapes">
-      <div class="hero-shape"></div>
-      <div class="hero-shape"></div>
-      <div class="hero-shape"></div>
-    </div>
+    <div class="hero-overlay"></div>
     <div class="hero-content">
       <h1>Redefine Your <span>Style</span></h1>
       <p>Curated fashion for the modern individual</p>
