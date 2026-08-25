@@ -1,19 +1,19 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: lasutra-postgres
+    container_name: zaraz-postgres
     restart: unless-stopped
 
     environment:
-      POSTGRES_USER: lasutra_user
+      POSTGRES_USER: zaraz_user
       POSTGRES_PASSWORD: nsjt54ewr
-      POSTGRES_DB: lasutra_db
+      POSTGRES_DB: zaraz_db
 
     ports:
       - "5432:5432"
 
     volumes:
-      - lasutra_postgres_data:/var/lib/postgresql/data
+      - zaraz_postgres_data:/var/lib/postgresql/data
 
 volumes:
-  lasutra_postgres_data:
+  zaraz_postgres_data:

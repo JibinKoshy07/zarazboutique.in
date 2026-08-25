@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LaSutra Boutique - Admin Panel</title>
+  <title>Zaraz Boutique - Admin Panel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -736,7 +736,7 @@
   <div class="login-container" id="loginPage">
     <div class="login-box">
       <div class="login-logo">
-        <h1>LaSutra</h1>
+        <h1>Zaraz</h1>
         <span>Admin Panel</span>
       </div>
       <form id="adminLoginForm">
@@ -758,7 +758,7 @@
   <div class="admin-container" id="adminPanel">
     <header class="admin-header">
       <div class="admin-logo">
-        LaSutra <span>Admin Panel</span>
+        Zaraz <span>Admin Panel</span>
       </div>
       <nav class="admin-nav">
         <button class="active" data-view="products" onclick="switchView('products', this)">Products</button>
@@ -956,7 +956,7 @@
     }
 
     // ============ AUTH ============
-    const savedAdmin = localStorage.getItem('lasutra_admin');
+    const savedAdmin = localStorage.getItem('zaraz_admin');
     if (savedAdmin) {
       showAdminPanel();
       initDashboard();
@@ -978,7 +978,7 @@
         const data = await response.json();
 
         if (response.ok) {
-          localStorage.setItem('lasutra_admin', JSON.stringify(data.admin));
+          localStorage.setItem('zaraz_admin', JSON.stringify(data.admin));
           showAdminPanel();
           initDashboard();
         } else {
@@ -995,7 +995,7 @@
     }
 
     function logout() {
-      localStorage.removeItem('lasutra_admin');
+      localStorage.removeItem('zaraz_admin');
       document.getElementById('loginPage').style.display = 'flex';
       document.getElementById('adminPanel').classList.remove('active');
     }

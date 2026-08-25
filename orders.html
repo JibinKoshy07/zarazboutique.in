@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Orders | LaSutra Boutique</title>
+  <title>My Orders | Zaraz Boutique</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -117,7 +117,7 @@
 </head>
 <body>
   <header class="header">
-    <a href="index.html" class="logo">LaSutra</a>
+    <a href="index.html" class="logo">Zaraz</a>
     <nav class="nav">
       <a href="index.html">Home</a>
       <a href="index.html#products">Shop</a>
@@ -142,7 +142,7 @@
   <script>
     const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1']);
     const API_URL = LOCAL_HOSTS.has(location.hostname) ? 'http://localhost:3000/api' : location.origin + '/api';
-    let user = JSON.parse(localStorage.getItem('lasutra_user') || 'null');
+    let user = JSON.parse(localStorage.getItem('zaraz_user') || 'null');
     const TIMELINE = ['Placed', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered'];
     const BLOCKED = ['Cancelled', 'Payment Failed', 'Returned', 'Refunded'];
 
@@ -152,7 +152,7 @@
       try {
         const res = await fetch(`${API_URL}/users/${user.id}`);
         if (res.status === 404 || res.status === 400) {
-          localStorage.removeItem('lasutra_user');
+          localStorage.removeItem('zaraz_user');
           user = null;
         }
       } catch (_) { }
@@ -168,7 +168,7 @@
     }
 
     function logout() {
-      localStorage.removeItem('lasutra_user');
+      localStorage.removeItem('zaraz_user');
       location.href = 'index.html';
     }
 

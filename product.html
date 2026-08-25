@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Product Details | LaSutra Boutique</title>
+  <title>Product Details | Zaraz Boutique</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -451,7 +451,7 @@
 </head>
 <body>
   <header class="header">
-    <a href="index.html" class="logo">LaSutra</a>
+    <a href="index.html" class="logo">Zaraz</a>
     <nav class="nav">
       <a href="index.html">Home</a>
       <a href="index.html#products">Shop</a>
@@ -487,19 +487,19 @@
     }
 
     function cartSummary() {
-      const cart = JSON.parse(localStorage.getItem('lasutra_cart') || '[]');
+      const cart = JSON.parse(localStorage.getItem('zaraz_cart') || '[]');
       return cart.reduce((s, i) => s + i.quantity, 0);
     }
 
     function saveToCart(item) {
-      const cart = JSON.parse(localStorage.getItem('lasutra_cart') || '[]');
+      const cart = JSON.parse(localStorage.getItem('zaraz_cart') || '[]');
       const existing = cart.find(i => i.id === item.id && i.size === item.size);
       if (existing) {
         existing.quantity += item.quantity;
       } else {
         cart.push(item);
       }
-      localStorage.setItem('lasutra_cart', JSON.stringify(cart));
+      localStorage.setItem('zaraz_cart', JSON.stringify(cart));
       cartBadge.textContent = cartSummary();
       return existing ? existing.quantity : item.quantity;
     }
@@ -538,7 +538,7 @@
       const sizes = ['XS', 'S', 'M', 'L', 'XL'];
       selectedSize = getNextSize(sizes);
 
-      document.title = `${product.name} | LaSutra Boutique`;
+      document.title = `${product.name} | Zaraz Boutique`;
       document.getElementById('content').innerHTML = `
         <div class="layout">
           <div>
@@ -629,7 +629,7 @@
       const cart = [];
       cart.push({ id: product.id, name: product.name, price: product.price, image: product.image, size: selectedSize, quantity: parseInt(document.getElementById('qtyVal').textContent) });
       // mark BUY NOW intent: checkout reads this raw set and does not persist to main cart until success
-      sessionStorage.setItem('lasutra_checkout_items', JSON.stringify(cart));
+      sessionStorage.setItem('zaraz_checkout_items', JSON.stringify(cart));
       location.href = 'checkout.html';
     }
 

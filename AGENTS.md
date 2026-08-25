@@ -1,4 +1,4 @@
-# LaSutra Boutique — Repo Knowledge
+# Zaraz Boutique — Repo Knowledge
 
 ## Stack
 - Express + pg (PostgreSQL), plain HTML/CSS/JS storefront & admin
@@ -8,7 +8,7 @@
 
 ## Notable Behaviors
 - **Subcategories**: `categories.parent_id` self-FK, exactly ONE level (backend rejects deeper). A parent's filter includes products of its subcategories (server: `OR category_id IN (SELECT id FROM categories WHERE parent_id = $1)`; client: same expansion in `renderProducts`). Chips render parent first + `› sub` chips when parent/sub is active. Admin renders subs as `Parent › Sub`. Deleting a parent → subs become top-level (ON DELETE SET NULL)
-- **Cart persistence**: localStorage key `lasutra_cart`; index, product, checkout read it; `sessionStorage` key `lasutra_checkout_items` used for BUY NOW flow
+- **Cart persistence**: localStorage key `zaraz_cart`; index, product, checkout read it; `sessionStorage` key `zaraz_checkout_items` used for BUY NOW flow
 - **Order statuses (ORDER_STATUSES in server.js)**: `['Placed','Processing','Shipped','Out for Delivery','Delivered','Cancelled','Payment Failed','Returned','Refunded']`
 - **Status history**: stored in dedicated table `order_status_history` (separate from `orders`). PUT `/api/admin/orders/:id/status` appends a row. GET `/api/orders/:userId/:orderId` returns `history` (not `status_history`)
 - **Admin orders search/filter**: `/api/admin/orders?q=` and `?status=` query params; frontend filters client-side too via `.orders-toolbar`
@@ -19,8 +19,8 @@
 - ⚠ dotenv truncates env values at `#` unless quoted — password like `jibu#007` must be `'jibu#007'` in .env
 
 ## Common Docker / DB commands
-- Container name: **`lasutra-pg`** (not `lasutra-postgres` or `lasutra_postgres`)
-- DB name: **`lasutra`** (not `lasutra_db`); user: `postgres` (suggested by init) or `lasutra_user` if set
+- Container name: **`zaraz-pg`** (not `zaraz-postgres` or `zaraz_postgres`)
+- DB name: **`zaraz`** (not `zaraz_db`); user: `postgres` (suggested by init) or `zaraz_user` if set
 - Docker requires sudo in this sandbox: `sudo docker ps`
 
 ## Workflow Rules (standing)

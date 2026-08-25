@@ -1,7 +1,7 @@
 {
-  "name": "lasutra-backend",
+  "name": "zaraz-backend",
   "version": "1.0.0",
-  "description": "LaSutra Boutique Backend API",
+  "description": "Zaraz Boutique Backend API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

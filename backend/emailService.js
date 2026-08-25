@@ -30,11 +30,11 @@ const sendOrderConfirmation = async (user, orderId, items, totalAmount, address)
     const mailOptions = {
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: user.email,
-      subject: `Order Confirmed - #${orderId} | LaSutra Boutique`,
+      subject: `Order Confirmed - #${orderId} | Zaraz Boutique`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: #1a1a2e; padding: 20px; text-align: center;">
-            <h1 style="color: #e94560; margin: 0;">LaSutra Boutique</h1>
+            <h1 style="color: #e94560; margin: 0;">Zaraz Boutique</h1>
           </div>
           
           <div style="padding: 30px; background: #f8f8f8;">
@@ -74,7 +74,7 @@ const sendOrderConfirmation = async (user, orderId, items, totalAmount, address)
           </div>
           
           <div style="background: #1a1a2e; padding: 20px; text-align: center; color: white;">
-            <p style="margin: 0;">&copy; 2024 LaSutra Boutique. All rights reserved.</p>
+            <p style="margin: 0;">&copy; 2024 Zaraz Boutique. All rights reserved.</p>
           </div>
         </div>
       `
@@ -106,7 +106,7 @@ const sendAdminNotification = async (user, orderId, items, totalAmount, address)
     const mailOptions = {
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: process.env.ORDER_NOTIFICATION_EMAIL,
-      subject: `🛒 New Order Received - #${orderId} | LaSutra Boutique`,
+      subject: `🛒 New Order Received - #${orderId} | Zaraz Boutique`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: #e94560; padding: 20px; text-align: center;">
@@ -187,11 +187,11 @@ const sendStatusUpdateEmail = async (user, orderId, newStatus, items, totalAmoun
     const mailOptions = {
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: user.email,
-      subject: `Order #${orderId} Status Update - ${newStatus.replace('_', ' ').toUpperCase()} | LaSutra Boutique`,
+      subject: `Order #${orderId} Status Update - ${newStatus.replace('_', ' ').toUpperCase()} | Zaraz Boutique`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: #1a1a2e; padding: 20px; text-align: center;">
-            <h1 style="color: #e94560; margin: 0;">LaSutra Boutique</h1>
+            <h1 style="color: #e94560; margin: 0;">Zaraz Boutique</h1>
           </div>
           
           <div style="padding: 30px; background: #f8f8f8;">
@@ -220,12 +220,12 @@ const sendStatusUpdateEmail = async (user, orderId, newStatus, items, totalAmoun
             </div>
             
             <p style="color: #666; font-size: 14px;">
-              Thank you for shopping with LaSutra Boutique!
+              Thank you for shopping with Zaraz Boutique!
             </p>
           </div>
           
           <div style="background: #1a1a2e; padding: 20px; text-align: center; color: white;">
-            <p style="margin: 0;">&copy; 2024 LaSutra Boutique. All rights reserved.</p>
+            <p style="margin: 0;">&copy; 2024 Zaraz Boutique. All rights reserved.</p>
           </div>
         </div>
       `

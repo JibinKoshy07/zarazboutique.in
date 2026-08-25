@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Checkout | LaSutra Boutique</title>
+  <title>Checkout | Zaraz Boutique</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -116,7 +116,7 @@
 </head>
 <body>
   <header class="header">
-    <a href="index.html" class="logo">LaSutra</a>
+    <a href="index.html" class="logo">Zaraz</a>
     <div class="nav"><a href="index.html">Home</a>&nbsp;&nbsp;<a href="orders.html">My Orders</a></div>
   </header>
 
@@ -125,9 +125,9 @@
   <script>
     const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1']);
     const API_URL = LOCAL_HOSTS.has(location.hostname) ? 'http://localhost:3000/api' : location.origin + '/api';
-    let user = JSON.parse(localStorage.getItem('lasutra_user') || 'null');
-    const checkoutItems = JSON.parse(sessionStorage.getItem('lasutra_checkout_items') || '[]');
-    const cart = JSON.parse(localStorage.getItem('lasutra_cart') || '[]');
+    let user = JSON.parse(localStorage.getItem('zaraz_user') || 'null');
+    const checkoutItems = JSON.parse(sessionStorage.getItem('zaraz_checkout_items') || '[]');
+    const cart = JSON.parse(localStorage.getItem('zaraz_cart') || '[]');
 
     // Validate the stored user still exists; stale sessions (e.g. after a DB reset) get bounced to login
     async function validateUser() {
@@ -135,7 +135,7 @@
       try {
         const res = await fetch(`${API_URL}/users/${user.id}`);
         if (res.status === 404 || res.status === 400) {
-          localStorage.removeItem('lasutra_user');
+          localStorage.removeItem('zaraz_user');
           user = null;
         }
       } catch (_) { /* network hiccup — treat as still logged in */ }
@@ -341,12 +341,12 @@
 
         // clear whichever source we used
         if (checkoutItems.length > 0) {
-          sessionStorage.removeItem('lasutra_checkout_items');
+          sessionStorage.removeItem('zaraz_checkout_items');
           // remove purchased items out of the bag (Buy Now mutates bag only on success)
           const cartAfter = cart.filter(c => !items.some(i => i.id === c.id && i.size === (c.size || null)));
-          localStorage.setItem('lasutra_cart', JSON.stringify(cartAfter));
+          localStorage.setItem('zaraz_cart', JSON.stringify(cartAfter));
         } else {
-          localStorage.setItem('lasutra_cart', '[]');
+          localStorage.setItem('zaraz_cart', '[]');
         }
 
         document.getElementById('checkout').innerHTML = `

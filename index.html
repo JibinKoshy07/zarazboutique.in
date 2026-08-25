@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LaSutra Boutique | Redefine Your Style</title>
+  <title>Zaraz Boutique | Redefine Your Style</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
@@ -1200,7 +1200,7 @@
 <body>
   <!-- Header -->
   <header class="header">
-    <a href="#" class="logo">LaSutra</a>
+    <a href="#" class="logo">Zaraz</a>
     <nav class="nav">
       <a href="#">Home</a>
       <a href="#products">Shop</a>
@@ -1254,8 +1254,8 @@
   <footer class="footer">
     <div class="footer-content">
       <div class="footer-col">
-        <h4>About LaSutra</h4>
-        <p>LaSutra is a boutique fashion brand dedicated to bringing you timeless pieces with a modern twist. Our curated collection features high-quality fabrics and impeccable craftsmanship.</p>
+        <h4>About Zaraz</h4>
+        <p>Zaraz is a boutique fashion brand dedicated to bringing you timeless pieces with a modern twist. Our curated collection features high-quality fabrics and impeccable craftsmanship.</p>
         <div class="social-links">
           <a href="#">
             <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
@@ -1296,7 +1296,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <p>&copy; 2024 LaSutra Boutique. All rights reserved.</p>
+      <p>&copy; 2024 Zaraz Boutique. All rights reserved.</p>
     </div>
   </footer>
 
@@ -1523,7 +1523,7 @@
     });
 
     // Cart State (persisted so the checkout page can pick it up)
-    let cart = JSON.parse(localStorage.getItem('lasutra_cart') || '[]');
+    let cart = JSON.parse(localStorage.getItem('zaraz_cart') || '[]');
 
     // DOM Elements
     const productsGrid = document.getElementById('productsGrid');
@@ -1674,7 +1674,7 @@
       cartSubtotal.textContent = `₹${subtotal}`;
 
       // Persist so the checkout page has the latest bag
-      localStorage.setItem('lasutra_cart', JSON.stringify(cart));
+      localStorage.setItem('zaraz_cart', JSON.stringify(cart));
     }
 
     // Decrease Quantity
@@ -1741,7 +1741,7 @@
 
     // Load current user; validate it still exists (stale sessions after DB resets get bounced)
     async function loadCurrentUser() {
-      const stored = localStorage.getItem('lasutra_user');
+      const stored = localStorage.getItem('zaraz_user');
       if (!stored) return;
       currentUser = JSON.parse(stored);
       try {
@@ -1758,9 +1758,9 @@
     // Save current user to localStorage
     function saveCurrentUser() {
       if (currentUser) {
-        localStorage.setItem('lasutra_user', JSON.stringify(currentUser));
+        localStorage.setItem('zaraz_user', JSON.stringify(currentUser));
       } else {
-        localStorage.removeItem('lasutra_user');
+        localStorage.removeItem('zaraz_user');
       }
     }
 

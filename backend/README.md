@@ -1,6 +1,6 @@
-# LaSutra Backend - Node.js + PostgreSQL
+# Zaraz Backend - Node.js + PostgreSQL
 
-This is the backend API for the LaSutra Boutique e-commerce application.
+This is the backend API for the Zaraz Boutique e-commerce application.
 
 ## Prerequisites
 
@@ -11,7 +11,7 @@ This is the backend API for the LaSutra Boutique e-commerce application.
 
 1. **Install PostgreSQL** and create a database:
    ```sql
-   CREATE DATABASE lasutra;
+   CREATE DATABASE zaraz;
    ```
 
 2. **Configure database credentials**:
@@ -58,7 +58,7 @@ The following tables are automatically created:
 ```
 DB_USER=postgres
 DB_HOST=localhost
-DB_NAME=lasutra
+DB_NAME=zaraz
 DB_PASSWORD=your_password
 DB_PORT=5432
 PORT=3000

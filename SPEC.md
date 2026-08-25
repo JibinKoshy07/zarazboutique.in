@@ -1,7 +1,7 @@
 # E-Commerce WebApp Specification
 
 ## 1. Project Overview
-- **Project Name**: LaSutra Boutique
+- **Project Name**: Zaraz Boutique
 - **Type**: Single-page e-commerce webapp
 - **Core Functionality**: A stylish boutique shopping experience with product browsing, cart management, and checkout simulation
 - **Target Users**: Online shoppers looking for fashion items
@@ -61,7 +61,7 @@
 ### Components
 
 #### Header
-- Logo (left): "LaSutra" in Playfair Display italic
+- Logo (left): "Zaraz" in Playfair Display italic
 - Navigation (center): Home, Shop, About, Contact
 - Cart Icon (right): Shopping bag with badge showing item count
 - Sticky on scroll with backdrop blur
