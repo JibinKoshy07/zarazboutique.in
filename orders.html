@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -66,6 +67,10 @@
     .order-detail.open { display: block; }
     .back-btn { background: none; border: none; color: var(--ink-soft); font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-bottom: 18px; }
     .back-btn:hover { color: var(--ink); }
+    .pay-btn { background: var(--accent); color: #fff; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.9rem; margin-top: 10px; }
+    .pay-btn:hover { filter: brightness(0.92); }
+    .pay-btn:disabled { opacity: 0.6; cursor: wait; }
+    .pay-note { font-size: 0.8rem; color: #d32f2f; font-weight: 600; margin-top: 8px; }
 
     /* Timeline stepper */
     .timeline { display: flex; justify-content: space-between; margin: 20px 0; position: relative; }
@@ -179,6 +184,52 @@
       return map[s] || 'status-payment-failed';
     }
 
+    // Orders placed via Cashfree that were never paid (or whose payment failed) can be completed later
+    function needsPayment(o) {
+      return o.payment_method === 'Cashfree'
+        && ['Pending', 'Failed'].includes(o.payment_status || 'Pending')
+        && !['Cancelled', 'Returned', 'Refunded'].includes(o.status);
+    }
+
+    async function completePayment(orderId, btn) {
+      if (btn) { btn.disabled = true; btn.textContent = 'Opening payment…'; }
+      try {
+        // Fresh payment session for the existing order
+        const res = await fetch(`${API_URL}/payments/cashfree/repay/${orderId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Could not initiate payment');
+
+        const cashfree = Cashfree({ mode: data.mode || 'sandbox' });
+        await cashfree.checkout({ paymentSessionId: data.paymentSessionId, redirectTarget: '_modal' });
+
+        // Modal closed — confirm server-side, then refresh the list
+        let status = 'PENDING';
+        for (let attempt = 0; attempt < 5 && status === 'PENDING'; attempt++) {
+          const vRes = await fetch(`${API_URL}/payments/cashfree/verify/${orderId}`);
+          const vData = await vRes.json();
+          if (vRes.ok) status = vData.status;
+          if (status === 'PENDING') await new Promise(r => setTimeout(r, 2000));
+        }
+
+        if (status === 'PAID') {
+          await init();
+          await openOrder(orderId);
+        } else {
+          alert(status === 'FAILED'
+            ? 'Payment failed. No money was captured — you can try again.'
+            : 'Payment is not confirmed yet. If money was deducted, it will reflect shortly.');
+          await init();
+        }
+      } catch (err) {
+        alert(err.message || 'Could not start payment. Please try again.');
+        if (btn) { btn.disabled = false; btn.textContent = 'Complete Payment'; }
+      }
+    }
+
     async function init() {
       await validateUser();
       header();
@@ -214,6 +265,7 @@
               </div>
             </div>
             <div class="order-preview">${o.items.length} item${o.items.length !== 1 ? 's' : ''} · Payment: ${o.payment_status || 'Pending'}</div>
+            ${needsPayment(o) ? `<button class="pay-btn" onclick="event.stopPropagation(); completePayment(${o.id}, this)">Complete Payment</button>` : ''}
           </div>
         `).join('');
       } catch (e) {
@@ -275,6 +327,10 @@
                 <p class="address-line">${addressHtml}</p>
                 <h3 style="margin-top:16px">Payment</h3>
                 <p class="address-line">${o.payment_method || 'N/A'} — ${o.payment_status || 'Pending'}</p>
+                ${needsPayment(o) ? `
+                  <div class="pay-note">This order is awaiting payment.</div>
+                  <button class="pay-btn" onclick="completePayment(${o.id}, this)">Complete Payment – ₹${parseFloat(o.total_amount).toFixed(2)}</button>
+                ` : ''}
                 <div class="history">
                   <h3>Status History</h3>
                   ${(o.history || []).map(h => `

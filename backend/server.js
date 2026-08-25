@@ -312,10 +312,20 @@ async function computeOrderTotal(items) {
 }
 
 async function markOrderPaid(orderId) {
-  await pool.query(
-    `UPDATE orders SET payment_status = 'Paid' WHERE id = $1 AND payment_status != 'Paid'`,
+  const updated = await pool.query(
+    `UPDATE orders SET payment_status = 'Paid',
+       status = CASE WHEN status = 'Payment Failed' THEN 'Placed' ELSE status END
+     WHERE id = $1 AND payment_status != 'Paid'
+     RETURNING status`,
     [orderId]
   );
+  // If a retried payment revived a Payment Failed order, log the status change in the timeline
+  if (updated.rows.length > 0 && updated.rows[0].status === 'Placed') {
+    await pool.query(
+      'INSERT INTO order_status_history (order_id, status) VALUES ($1, $2)',
+      [orderId, 'Placed']
+    );
+  }
 }
 
 // Create Cashfree order for online payment
@@ -399,6 +409,84 @@ app.post('/api/payments/cashfree/create-order', async (req, res) => {
   }
 });
 
+// Create a fresh payment session for an existing unpaid order ("Complete Payment" on orders page).
+// Cashfree order ids can't be reused after a payment attempt, so each retry gets a new one.
+app.post('/api/payments/cashfree/repay/:orderId', async (req, res) => {
+  try {
+    if (!cashfreeConfigured()) {
+      return res.status(503).json({ error: 'Online payments are not configured yet' });
+    }
+
+    const orderId = req.params.orderId;
+    const { userId } = req.body;
+
+    const orderResult = await pool.query(
+      `SELECT o.id, o.user_id, o.total_amount, o.status, o.payment_method, o.payment_status, o.cf_order_id,
+              u.name AS user_name, u.email AS user_email, o.shipping_address
+       FROM orders o JOIN users u ON u.id = o.user_id
+       WHERE o.id = $1`,
+      [orderId]
+    );
+    const order = orderResult.rows[0];
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    if (String(order.user_id) !== String(userId)) {
+      return res.status(403).json({ error: 'This order does not belong to you' });
+    }
+    if (order.payment_status === 'Paid') {
+      return res.status(400).json({ error: 'This order is already paid' });
+    }
+    if (order.payment_method !== 'Cashfree') {
+      return res.status(400).json({ error: 'This order was not placed for online payment' });
+    }
+    if (['Cancelled', 'Returned', 'Refunded'].includes(order.status)) {
+      return res.status(400).json({ error: `Cannot pay for a ${order.status.toLowerCase()} order` });
+    }
+
+    const cfOrderId = `zaraz_${order.id}_${Date.now().toString(36)}`;
+    const address = order.shipping_address || {};
+    const phone = String(address.phone || '').replace(/\D/g, '').slice(-10) || '9999999999';
+
+    const cfPayload = {
+      order_id: cfOrderId,
+      order_amount: Number(parseFloat(order.total_amount).toFixed(2)),
+      order_currency: 'INR',
+      customer_details: {
+        customer_id: `user_${order.user_id}`,
+        customer_name: order.user_name || 'Customer',
+        customer_email: order.user_email || 'customer@example.com',
+        customer_phone: phone
+      }
+    };
+    if (process.env.APP_BASE_URL) {
+      cfPayload.order_meta = { return_url: `${process.env.APP_BASE_URL}/orders.html?orderId=${order.id}` };
+    }
+
+    const cfOrder = await cashfreeRequest('POST', '/orders', cfPayload);
+
+    // Point the order at the new Cashfree session; a failed attempt becomes payable again
+    await pool.query(
+      `UPDATE orders SET cf_order_id = $1, payment_status = 'Pending',
+         status = CASE WHEN status = 'Payment Failed' THEN 'Placed' ELSE status END
+       WHERE id = $2`,
+      [cfOrderId, order.id]
+    );
+
+    res.json({
+      orderId: order.id,
+      cfOrderId,
+      paymentSessionId: cfOrder.payment_session_id,
+      mode: process.env.CASHFREE_ENV === 'production' ? 'production' : 'sandbox',
+      amount: parseFloat(order.total_amount)
+    });
+  } catch (err) {
+    console.error('Cashfree repay error:', err);
+    res.status(500).json({ error: err.message || 'Could not initiate payment' });
+  }
+});
+
 // Verify payment after the checkout modal closes (client-driven confirmation)
 app.get('/api/payments/cashfree/verify/:orderId', async (req, res) => {
   try {
@@ -461,7 +549,9 @@ app.post('/api/webhooks/cashfree', async (req, res) => {
     const paymentStatus = event.data && event.data.payment && event.data.payment.payment_status;
 
     if (cfOrderId && paymentStatus === 'SUCCESS') {
-      const orderId = parseInt(String(cfOrderId).replace('zaraz_', ''), 10);
+      // cf order ids look like zaraz_{orderId} or zaraz_{orderId}_{retrySuffix}
+      const match = String(cfOrderId).match(/^zaraz_(\d+)/);
+      const orderId = match ? parseInt(match[1], 10) : NaN;
       if (!Number.isNaN(orderId)) {
         await markOrderPaid(orderId);
         console.log(`✅ Webhook: order ${orderId} marked as Paid`);
