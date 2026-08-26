@@ -4,16 +4,41 @@ services:
     container_name: zaraz-postgres
     restart: unless-stopped
 
-    environment:
-      POSTGRES_USER: zaraz_user
-      POSTGRES_PASSWORD: nsjt54ewr
-      POSTGRES_DB: zaraz_db
+    env_file:
+      - .env.docker
 
-    ports:
-      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
 
     volumes:
       - zaraz_postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: zaraz-backend
+    restart: unless-stopped
+
+    env_file:
+      - .env.docker
+
+    environment:
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+
+    ports:
+      - "127.0.0.1:3000:3000"
+
+    depends_on:
+      - postgres
 
 volumes:
   zaraz_postgres_data:
