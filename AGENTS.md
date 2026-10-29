@@ -39,6 +39,11 @@ sandbox URL) — a hardcoded URL breaks local dev whenever sandbox code is pulle
 - `backend/src/services/storageService.js` — image storage (local disk).
 - `frontend/*.html` + `frontend/assets/` — storefront.
 - `frontend/admin/` — admin console (own CSS/JS under `assets/`).
+- `frontend/assets/img/hero-saree-mannequin.svg` — bespoke storefront hero
+  (mannequin in a teal + antique-gold saree). Self-hosted SVG, no external
+  hotlink. **Never commit stock previews** (e.g. iStock/Shutterstock comps) —
+  they ship a visible watermark and are unlicensed. Only use free-licence
+  sources (Pexels/Unsplash/Commons) or original artwork.
 
 ## Auth & security
 - bcrypt password hashing; stateless JWT (`JWT_SECRET`, `JWT_EXPIRES_IN`).

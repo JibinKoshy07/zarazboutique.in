@@ -1,0 +1,153 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1125" width="900" height="1125" role="img" aria-labelledby="heroTitle heroDesc">
+  <title id="heroTitle">Mannequin draped in a teal and antique gold Banarasi silk saree</title>
+  <desc id="heroDesc">Illustration of a dress-form mannequin on a stand wearing a teal silk saree with an antique gold zari border and a pallu draped over the shoulder, against a soft cream arch.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7f0e4"/>
+      <stop offset="0.5" stop-color="#efe5d5"/>
+      <stop offset="1" stop-color="#e3d5c0"/>
+    </linearGradient>
+
+    <linearGradient id="arch" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0f6d7d" stop-opacity="0.30"/>
+      <stop offset="0.5" stop-color="#0f6d7d" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#0f6d7d" stop-opacity="0.04"/>
+    </linearGradient>
+
+    <linearGradient id="form" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#b99f80"/>
+      <stop offset="0.26" stop-color="#e6d5bd"/>
+      <stop offset="0.5" stop-color="#f2e6d4"/>
+      <stop offset="0.78" stop-color="#dcc7ab"/>
+      <stop offset="1" stop-color="#b09373"/>
+    </linearGradient>
+
+    <linearGradient id="teal" x1="0.05" y1="0" x2="0.95" y2="1">
+      <stop offset="0" stop-color="#189aa9"/>
+      <stop offset="0.3" stop-color="#0f6d7d"/>
+      <stop offset="0.68" stop-color="#0a4d5a"/>
+      <stop offset="1" stop-color="#06353e"/>
+    </linearGradient>
+
+    <linearGradient id="tealLit" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#45aeb9"/>
+      <stop offset="0.45" stop-color="#15808f"/>
+      <stop offset="1" stop-color="#0b5461"/>
+    </linearGradient>
+
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f4e6bb"/>
+      <stop offset="0.42" stop-color="#cfa93f"/>
+      <stop offset="1" stop-color="#7d6116"/>
+    </linearGradient>
+
+    <linearGradient id="stand" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5c4a33"/>
+      <stop offset="0.45" stop-color="#8a6c1c"/>
+      <stop offset="1" stop-color="#4a3a26"/>
+    </linearGradient>
+
+    <radialGradient id="shadow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#0a4d5a" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#0a4d5a" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="glow" cx="0.5" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.7"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+
+    <clipPath id="skirtClip">
+      <path d="M360 600 L540 600 C582 668 606 730 618 800 C636 882 646 950 650 1020 L250 1020 C254 950 264 882 282 800 C294 730 318 668 360 600 Z"/>
+    </clipPath>
+
+    <clipPath id="bodiceClip">
+      <path d="M352 360 C352 330 396 312 450 312 C504 312 548 330 548 360 L560 486 C564 526 548 560 518 580 L382 580 C352 560 336 526 340 486 Z"/>
+    </clipPath>
+
+    <pattern id="buti" width="70" height="70" patternUnits="userSpaceOnUse" patternTransform="rotate(7)">
+      <path d="M35 14c7 8 11 14 11 20a11 11 0 0 1-22 0c0-6 4-12 11-20z" fill="none" stroke="#cfa93f" stroke-width="2" opacity="0.6"/>
+      <circle cx="35" cy="34" r="2.6" fill="#e8d29a" opacity="0.8"/>
+      <circle cx="0" cy="0" r="1.7" fill="#e8d29a" opacity="0.45"/>
+    </pattern>
+  </defs>
+
+  <rect width="900" height="1125" fill="url(#bg)"/>
+
+  <path d="M150 1020 V446 A300 300 0 0 1 750 446 V1020 Z" fill="url(#arch)"/>
+  <path d="M150 1020 V446 A300 300 0 0 1 750 446 V1020" fill="none" stroke="url(#gold)" stroke-width="3.4" opacity="0.6"/>
+  <path d="M188 1020 V454 A262 262 0 0 1 712 454 V1020" fill="none" stroke="#cfa93f" stroke-width="1.3" opacity="0.38"/>
+  <circle cx="450" cy="320" r="210" fill="url(#glow)"/>
+
+  <ellipse cx="450" cy="1032" rx="310" ry="52" fill="url(#shadow)"/>
+
+  <!-- stand -->
+  <g>
+    <path d="M440 980h20v36h-20z" fill="url(#stand)"/>
+    <path d="M386 1016h128l16 26H370z" fill="url(#stand)"/>
+    <path d="M386 1016h128l16 26H370z" fill="none" stroke="#3b2d1c" stroke-width="2" opacity="0.6"/>
+  </g>
+
+  <!-- dress form: head, neck, torso -->
+  <g>
+    <ellipse cx="450" cy="196" rx="44" ry="56" fill="url(#form)"/>
+    <ellipse cx="450" cy="196" rx="44" ry="56" fill="none" stroke="#a08765" stroke-width="1.6" opacity="0.6"/>
+    <path d="M432 246h36l7 52h-50z" fill="url(#form)"/>
+    <path d="M432 246h36l7 52h-50z" fill="none" stroke="#a08765" stroke-width="1.4" opacity="0.5"/>
+    <path d="M352 360 C352 328 396 310 450 310 C504 310 548 328 548 360 L560 486 C564 528 546 562 516 582 L384 582 C354 562 336 528 340 486 Z" fill="url(#form)"/>
+    <ellipse cx="432" cy="182" rx="19" ry="30" fill="#ffffff" opacity="0.3"/>
+    <path d="M414 344h72v40h-72z" fill="#000000" opacity="0.05"/>
+  </g>
+
+  <!-- arms -->
+  <path d="M366 366 C344 414 336 476 342 538 C345 572 353 596 366 616 L392 606 C377 578 368 544 368 506 C368 446 377 402 392 370 Z" fill="url(#form)"/>
+  <path d="M534 366 C556 414 564 476 558 538 C555 572 547 596 534 616 L508 606 C523 578 532 544 532 506 C532 446 523 402 508 370 Z" fill="url(#form)"/>
+  <path d="M366 366 C344 414 336 476 342 538 C345 572 353 596 366 616" fill="none" stroke="#a08765" stroke-width="1.5" opacity="0.5"/>
+  <path d="M534 366 C556 414 564 476 558 538 C555 572 547 596 534 616" fill="none" stroke="#a08765" stroke-width="1.5" opacity="0.5"/>
+
+  <!-- skirt -->
+  <g>
+    <path d="M360 600 L540 600 C582 668 606 730 618 800 C636 882 646 950 650 1020 L250 1020 C254 950 264 882 282 800 C294 730 318 668 360 600 Z" fill="url(#teal)"/>
+    <g clip-path="url(#skirtClip)">
+      <rect x="230" y="580" width="440" height="470" fill="url(#buti)"/>
+      <path d="M330 612 C350 712 358 872 350 1020" fill="none" stroke="#06353e" stroke-width="3.4" opacity="0.5"/>
+      <path d="M396 604 C410 712 414 872 410 1020" fill="none" stroke="#06353e" stroke-width="3.4" opacity="0.42"/>
+      <path d="M462 602 C472 712 474 872 472 1020" fill="none" stroke="#06353e" stroke-width="3.4" opacity="0.42"/>
+      <path d="M528 606 C540 712 548 872 552 1020" fill="none" stroke="#06353e" stroke-width="3.4" opacity="0.5"/>
+      <path d="M258 930 C376 886 526 886 644 930 L650 1020 L250 1020 Z" fill="#0a4d5a" opacity="0.55"/>
+    </g>
+    <path d="M258 934 C376 890 526 890 644 934" fill="none" stroke="url(#gold)" stroke-width="8"/>
+    <path d="M252 966 C374 922 528 922 650 966" fill="none" stroke="#e8d29a" stroke-width="2.2" opacity="0.85"/>
+    <path d="M360 600 L540 600" fill="none" stroke="url(#gold)" stroke-width="7"/>
+  </g>
+
+  <!-- bodice -->
+  <g clip-path="url(#bodiceClip)">
+    <rect x="330" y="310" width="240" height="290" fill="url(#teal)"/>
+    <rect x="330" y="310" width="240" height="290" fill="url(#buti)" opacity="0.7"/>
+  </g>
+  <path d="M346 372 C396 350 504 350 554 372" fill="none" stroke="url(#gold)" stroke-width="7"/>
+
+  <!-- pallu over the left shoulder -->
+  <g>
+    <path d="M338 356 C346 326 386 310 424 316 L484 340 C520 358 534 398 526 446 L498 574 L356 590 C338 544 332 440 338 356 Z" fill="url(#tealLit)"/>
+    <path d="M338 356 C346 326 386 310 424 316 L484 340" fill="none" stroke="url(#gold)" stroke-width="7"/>
+    <path d="M356 590 L498 574" fill="none" stroke="url(#gold)" stroke-width="7"/>
+    <path d="M468 334 C466 388 456 458 438 520" fill="none" stroke="#e8d29a" stroke-width="2.6" opacity="0.85"/>
+    <path d="M420 318 C420 374 412 446 396 514" fill="none" stroke="#e8d29a" stroke-width="2.6" opacity="0.65"/>
+    <path d="M386 356 C394 414 394 490 382 564" fill="none" stroke="#06353e" stroke-width="2.8" opacity="0.35"/>
+    <path d="M444 364 C452 422 452 496 440 570" fill="none" stroke="#06353e" stroke-width="2.8" opacity="0.35"/>
+    <path d="M338 356 C348 420 350 500 348 590" fill="none" stroke="#ffffff" stroke-width="9" opacity="0.12"/>
+  </g>
+
+  <!-- necklace -->
+  <g>
+    <path d="M400 352 C418 374 482 374 500 352" fill="none" stroke="url(#gold)" stroke-width="5.5"/>
+    <circle cx="450" cy="396" r="9" fill="url(#gold)"/>
+    <path d="M414 394h-12M486 394h-12" stroke="url(#gold)" stroke-width="4"/>
+  </g>
+
+  <path d="M322 430 C306 556 302 812 310 1020" fill="none" stroke="#ffffff" stroke-width="13" opacity="0.08"/>
+  <path d="M490 332 C484 394 474 476 464 558" fill="none" stroke="#ffffff" stroke-width="13" opacity="0.12"/>
+</svg>
