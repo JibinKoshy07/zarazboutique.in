@@ -24,7 +24,7 @@
     <form data-admin-login novalidate>
       <div class="field">
         <label for="admin-email">Email address</label>
-        <input class="input" id="admin-email" name="email" type="email" required autocomplete="username" placeholder="admin@zarazboutique.in" />
+        <input class="input" id="admin-email" name="email" type="email" required autocomplete="username" placeholder="admin@example.com" />
         <div class="field-error"></div>
       </div>
       <div class="field">
@@ -36,8 +36,9 @@
     </form>
 
     <div class="login-hint">
-      Seeded administrator: <strong>admin@zarazboutique.in</strong> / <strong>Admin@12345</strong><br />
-      Change these in your <code>.env</code> before going live.
+      Credentials come from <code>ADMIN_EMAIL</code> / <code>ADMIN_PASSWORD</code> in your
+      <code>.env</code>. If <code>ADMIN_PASSWORD</code> is blank, the password generated on
+      first boot is printed once in the API logs.
     </div>
     <p class="small muted text-center" style="margin:16px 0 0">
       <a href="../index.html">← Back to storefront</a>

@@ -1,7 +1,11 @@
+const { randomBytes } = require('crypto');
 const { pool, withTransaction } = require('./pool');
 const env = require('../config/env');
 const { hashPassword } = require('../middleware/auth');
 const { slugify } = require('../utils/helpers');
+
+/** URL-safe random password used when no ADMIN_PASSWORD is configured. */
+const randomPassword = () => randomBytes(18).toString('base64url');
 
 /**
  * Catalogue seed. Image URLs point at a stable public CDN so the storefront
@@ -281,7 +285,11 @@ const seedAdmin = async (client) => {
   const { rows } = await client.query('SELECT id FROM admins WHERE email = $1', [env.seed.adminEmail]);
   if (rows.length) return false;
 
-  const passwordHash = await hashPassword(env.seed.adminPassword);
+  // No ADMIN_PASSWORD configured: generate a strong one and print it once.
+  // It is never stored in plain text, so this log line is the only copy.
+  const generated = !env.seed.adminPassword;
+  const password = env.seed.adminPassword || randomPassword();
+  const passwordHash = await hashPassword(password);
   await client.query('INSERT INTO admins (name, email, password_hash, role) VALUES ($1,$2,$3,$4)', [
     env.seed.adminName,
     env.seed.adminEmail,
@@ -289,6 +297,9 @@ const seedAdmin = async (client) => {
     'superadmin',
   ]);
   console.log(`[seed] admin created: ${env.seed.adminEmail}`);
+  if (generated) {
+    console.log(`[seed] generated admin password (shown once, change it after login): ${password}`);
+  }
   return true;
 };
 
@@ -360,6 +371,10 @@ const seedProducts = async (client, categoryIds) => {
 
 /** Adds a demo shopper with an address and a sample order so the console has data. */
 const seedDemoCustomer = async (client) => {
+  // Optional sample shopper. Skipped unless a password is configured, so the
+  // app never ships a known customer login.
+  if (!env.seed.demoCustomerPassword) return false;
+
   const email = 'priya@example.com';
   const existing = await client.query('SELECT id FROM users WHERE email = $1', [email]);
   if (existing.rows.length) return false;
@@ -429,7 +444,7 @@ const seedDemoCustomer = async (client) => {
     [order.rows[0].id]
   );
 
-  console.log(`[seed] demo customer created: ${email} / ${env.seed.demoCustomerPassword}`);
+  console.log(`[seed] demo customer created: ${email}`);
   return true;
 };
 

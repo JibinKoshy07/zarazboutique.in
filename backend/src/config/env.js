@@ -64,10 +64,14 @@ const env = {
 
   seed: {
     enabled: bool(process.env.SEED_ON_START, true),
-    adminEmail: process.env.ADMIN_EMAIL || 'admin@zarazboutique.in',
-    adminPassword: process.env.ADMIN_PASSWORD || 'Admin@12345',
+    adminEmail: process.env.ADMIN_EMAIL || 'admin@example.com',
+    // No default password: when ADMIN_PASSWORD is unset the seeder generates a
+    // random one and prints it once, so no well-known credential ships with the
+    // app.
+    adminPassword: process.env.ADMIN_PASSWORD || '',
     adminName: process.env.ADMIN_NAME || 'Store Admin',
-    demoCustomerPassword: process.env.DEMO_CUSTOMER_PASSWORD || 'Customer@123',
+    // When empty the optional demo shopper is not created at all.
+    demoCustomerPassword: process.env.DEMO_CUSTOMER_PASSWORD || '',
   },
 
   payments: {

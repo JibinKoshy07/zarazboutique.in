@@ -48,12 +48,20 @@ then starts serving. First boot takes a few seconds.
 
 ### Seeded accounts
 
-| Role     | Email                       | Password        |
-| -------- | --------------------------- | --------------- |
-| Admin    | `admin@zarazboutique.in`    | `Admin@12345`   |
-| Customer | `priya@example.com`         | `Customer@123`  |
+The administrator and demo shopper are created on first boot from the
+`ADMIN_EMAIL` / `ADMIN_PASSWORD` and `DEMO_CUSTOMER_PASSWORD` values you set in
+your local `.env`. No credentials are stored in this repository.
 
-Change these in `.env` before any real deployment.
+Set them before starting the stack:
+
+```bash
+ADMIN_EMAIL=you@example.com
+ADMIN_PASSWORD=<a strong password>
+DEMO_CUSTOMER_PASSWORD=<a strong password>
+```
+
+To add further administrators, insert them directly into the `admins` table
+with a bcrypt-hashed password — see the note in `AGENTS.md`.
 
 Useful commands:
 

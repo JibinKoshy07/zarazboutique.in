@@ -52,8 +52,16 @@ sandbox URL) — a hardcoded URL breaks local dev whenever sandbox code is pulle
   headers, 1 MB JSON body limit. Uploaded-image URLs built from `API_PUBLIC_URL`.
 
 ## Seeded accounts
-- Admin: `admin@zarazboutique.in` / `Admin@12345` (from `ADMIN_EMAIL`/`ADMIN_PASSWORD`).
-- Demo customer: `priya@example.com` / `Customer@123` (`DEMO_CUSTOMER_PASSWORD`).
+- Admin is created on first boot from `ADMIN_EMAIL` / `ADMIN_PASSWORD`. **No
+  credentials are committed anywhere** — when `ADMIN_PASSWORD` is blank the
+  seeder generates a random password and prints it once to the API logs
+  (`[seed] generated admin password …`). Set `ADMIN_PASSWORD` in `.env` for a
+  predictable login.
+- The demo shopper (`priya@example.com`) is only created when
+  `DEMO_CUSTOMER_PASSWORD` is set; leave it blank to skip it.
+- Add extra admins by inserting into the `admins` table with a bcrypt hash
+  (`hashPassword` in `backend/src/middleware/auth.js`), or by changing
+  `ADMIN_EMAIL` and re-running the seed.
 - ⚠ dotenv truncates values at `#` unless quoted — `jibu#007` must be `'jibu#007'`.
 
 ## Admin console
