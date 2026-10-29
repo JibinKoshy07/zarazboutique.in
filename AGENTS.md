@@ -83,8 +83,12 @@ sandbox URL) — a hardcoded URL breaks local dev whenever sandbox code is pulle
 
 ## Workflow Rules (standing)
 1. Always push to git after changes (`git push`); branch is `release/v2`.
-2. Keep brand tokens consistent: Playfair Serif headings, maroon/gold/cream/muted
-   rose palette, soft beige background. Admin console prioritises usability.
+2. Keep brand tokens consistent: Playfair Serif headings, Turkish teal / antique
+   gold / cream / blush palette, soft cream background. Storefront tokens are
+   semantic (`--brand`, `--brand-deep`, `--brand-soft`, `--accent`,
+   `--accent-light`, `--accent-deep`, `--blush`) so the palette can be swapped
+   without touching rules; the admin console mirrors them as `--a-maroon`
+   (teal), `--a-gold`, `--a-sidebar`. Admin prioritises usability.
 3. When changing the order schema, update the status list AND all admin/frontend
    renderers.
 4. Quote dotenv values containing `#`.
