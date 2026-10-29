@@ -1,45 +1,82 @@
-# Zaraz Boutique — Repo Knowledge
+# Zaraz Boutique — Repo Knowledge (v2)
 
 ## Stack
-- Express + pg (PostgreSQL), plain HTML/CSS/JS storefront & admin
-- Frontend: `index.html`, `product.html`, `checkout.html`, `orders.html`, `about.html`, `contact.html` (both static, no API) — API URL is auto-detected once for all pages: `locations.hostname ∈ {localhost,127.0.0.1} → http://localhost:3000/api`, else `location.origin + /api`. NEVER hardcode a sandbox/work host URL (e.g. `work-*.prod-runtime.all-hands.dev`) — a hardcoded URL earlier broke the user's local dev whenever they pulled sandbox-tuned code
-- Admin panel: `admin.html` — same auto-detect as above
-- Backend: `backend/server.js`, `backend/db.js`
+- Backend: Express + `pg` (PostgreSQL), ES modules. Entry `backend/src/index.js`
+  (boot: wait for DB → migrate → seed → listen). `backend/src/app.js` builds the
+  app; `backend/src/config/env.js` parses env.
+- Frontend: plain HTML/CSS/JS, served by **nginx** which also proxies `/api` and
+  `/uploads` to the API. No build step.
+- DB: PostgreSQL. Schema `backend/src/db/migrations/001_init.sql`, seeds
+  `backend/src/db/seed.js` (idempotent).
 
-## Notable Behaviors
-- **Subcategories**: `categories.parent_id` self-FK, exactly ONE level (backend rejects deeper). A parent's filter includes products of its subcategories (server: `OR category_id IN (SELECT id FROM categories WHERE parent_id = $1)`; client: same expansion in `renderProducts`). Chips render parent first + `› sub` chips when parent/sub is active. Admin renders subs as `Parent › Sub`. Deleting a parent → subs become top-level (ON DELETE SET NULL)
-- **Cart persistence**: localStorage key `zaraz_cart`; index, product, checkout read it; `sessionStorage` key `zaraz_checkout_items` used for BUY NOW flow
-- **Order statuses (ORDER_STATUSES in server.js)**: `['Placed','Processing','Shipped','Out for Delivery','Delivered','Cancelled','Payment Failed','Returned','Refunded']`
-- **Status history**: stored in dedicated table `order_status_history` (separate from `orders`). PUT `/api/admin/orders/:id/status` appends a row. GET `/api/orders/:userId/:orderId` returns `history` (not `status_history`)
-- **Contact form**: `contact.html` POSTs to `/api/contact` → `sendContactMessage` in emailService.js. Recipient is env **`CONTACT_FORM_EMAIL`** (skipped gracefully if unset; SMTP_USER/SMTP_PASS must be set to actually send). Reply-To is the visitor's email
-- **Payments (Cashfree PG)**: env `CASHFREE_APP_ID` / `CASHFREE_SECRET_KEY` / `CASHFREE_ENV` (sandbox|production), optional `CASHFREE_WEBHOOK_SECRET` + `APP_BASE_URL`. Flow: checkout.html POSTs `/api/payments/cashfree/create-order` (server RECOMPUTES total from DB prices — never trust client amounts) → internal order created (payment_method `Cashfree`, payment_status `Pending`, cf order id = `zaraz_{orderId}` stored in `orders.cf_order_id`) → Cashfree JS SDK v3 modal (`redirectTarget:'_modal'`) → client polls `GET /api/payments/cashfree/verify/:orderId` (PAID → payment_status `Paid`; EXPIRED/TERMINATED → status `Payment Failed`). Reliable confirmation: `POST /api/webhooks/cashfree` (HMAC-SHA256 over `x-webhook-timestamp` + rawBody, base64 — needs `req.rawBody` captured by express.json verify hook). Old offline flow: paymentMethod `offline` → plain `POST /api/orders`. **Retry/complete payment**: `POST /api/payments/cashfree/repay/:orderId` (body `{userId}`, ownership-checked) creates a FRESH cf order id `zaraz_{id}_{ts36}` (cf ids can't be reused after an attempt) and resets Payment Failed→Placed; orders.html shows a "Complete Payment" button when `payment_method=Cashfree` AND `payment_status ∈ {Pending, Failed}` AND status not in Cancelled/Returned/Refunded; `markOrderPaid` revives Payment Failed→Placed + history row; webhook parses ids with `/^zaraz_(\d+)/`
-- **Admin orders search/filter**: `/api/admin/orders?q=` and `?status=` query params; frontend filters client-side too via `.orders-toolbar`
+## Hard constraint: API URL
+Frontend always calls **same-origin `/api`**. nginx proxies it to the API
+service. NEVER hardcode a host (especially not a `work-*.prod-runtime.all-hands.dev`
+sandbox URL) — a hardcoded URL breaks local dev whenever sandbox code is pulled.
 
-## Auth & Security (post-hardening)
-- **Session tokens**: stateless HMAC-signed (`base64url(payload).sig`), secret = env `SESSION_SECRET` (fallback ADMIN_PASSWORD/CASHFREE_SECRET_KEY; set SESSION_SECRET in prod), 7-day expiry. Login & register return `{token, user}`; admin login returns `{token, admin}`.
-- Frontend stores token in `localStorage` (`zaraz_token` user / `zaraz_admin_token` admin) and sends `Authorization: Bearer <token>` via `authHeaders()` (index/checkout/orders) and `adminHeaders()` (admin.html). Logout clears both user+token keys.
-- **Middleware**: `requireUser` / `requireAdmin` in server.js. Protected: `GET/PUT /api/users/:id*`, `GET /api/orders*`, `POST /api/orders`, all `/api/payments/cashfree/*` (user id from `req.auth.id`, NOT body), and ALL `/api/admin/*` except `/admin/login`.
-- **User id / order total are NEVER trusted from the client** — both derived server-side (token → userId; `computeOrderTotal(items)` → total).
-- **CORS** restricted to `ALLOWED_ORIGINS` env (comma-separated); **security headers** middleware added; **JSON body limit** 1mb. Upload image URL built from `API_PUBLIC_URL` (never the Host header).
-- New env vars (see .env.example): `SESSION_SECRET`, `ALLOWED_ORIGINS`, `API_PUBLIC_URL`.
+## Docker (primary way to run)
+- `docker compose up -d --build` → web :8080, api :4000, db :5432.
+- Services: `db` (postgres:16-alpine, container `zaraz-pg`), `api` (`zaraz-api`),
+  `web` (`zaraz-web`). Volumes `zaraz-db-data`, `zaraz-uploads`.
+- Compose requires `JWT_SECRET` (`.env.example` → `.env`).
+- Docker needs sudo in this sandbox: `sudo docker ps`, `sudo docker compose …`.
+- ⚠ Two footguns that broke the build once — keep them fixed:
+  1. `frontend/.dockerignore` must NOT ignore `nginx.conf.template` (the web
+     Dockerfile copies it to `/etc/nginx/templates/`). It is intentionally absent
+     from that file.
+  2. Files created by tooling can land as mode `600`, which nginx's unprivileged
+     `nginx` worker cannot read → the site returns **403**. The frontend
+     Dockerfile runs `chmod -R a+rX /usr/share/nginx/html` as a safety net; also
+     keep repo files `a+r` (`find . -type f -exec chmod a+r {} +`).
 
-## Admin
-- Seeded from `ADMIN_EMAIL` / `ADMIN_PASSWORD` env on first boot
-- Login via POST `/api/admin/login` returns `isAdmin:true`
-- ⚠ dotenv truncates env values at `#` unless quoted — password like `jibu#007` must be `'jibu#007'` in .env
+## Layout
+- `backend/src/modules/*` — service layer (auth, users, products, categories,
+  cart, addresses, orders, admin).
+- `backend/src/routes/*` — thin HTTP layer.
+- `backend/src/services/payment/index.js` — provider interface
+  (`createIntent`/`capture`); only `manual` (offline) exists. To add a real
+  gateway, implement the interface, register it, set `PAYMENT_PROVIDER`.
+- `backend/src/services/storageService.js` — image storage (local disk).
+- `frontend/*.html` + `frontend/assets/` — storefront.
+- `frontend/admin/` — admin console (own CSS/JS under `assets/`).
 
-## Common Docker / DB commands
-- Container name: **`zaraz-pg`** (not `zaraz-postgres` or `zaraz_postgres`)
-- DB name: **`zaraz`** (not `zaraz_db`); user: `postgres` (suggested by init) or `zaraz_user` if set
-- Docker requires sudo in this sandbox: `sudo docker ps`
+## Auth & security
+- bcrypt password hashing; stateless JWT (`JWT_SECRET`, `JWT_EXPIRES_IN`).
+- Middleware `requireUser` / `requireAdmin` (`backend/src/middleware/auth.js`).
+  ALL `/api/admin/*` except `/admin/login` require an admin token.
+- Server-side validation on every write (`backend/src/utils/validate.js`);
+  parameterised SQL only.
+- Order totals are ALWAYS recomputed from DB prices server-side — never trust a
+  client-supplied amount.
+- Rate limiting (`rateLimit.js`), CORS allow-list (`ALLOWED_ORIGINS`), security
+  headers, 1 MB JSON body limit. Uploaded-image URLs built from `API_PUBLIC_URL`.
+
+## Seeded accounts
+- Admin: `admin@zarazboutique.in` / `Admin@12345` (from `ADMIN_EMAIL`/`ADMIN_PASSWORD`).
+- Demo customer: `priya@example.com` / `Customer@123` (`DEMO_CUSTOMER_PASSWORD`).
+- ⚠ dotenv truncates values at `#` unless quoted — `jibu#007` must be `'jibu#007'`.
+
+## Admin console
+- Order status workflow: Pending → Confirmed → Processing → Shipped →
+  Out for Delivery → Delivered, plus Cancelled / Returned / Refunded. Status
+  changes append to order history.
+- Dashboard stats: revenue, orders, products, customers, pending, low stock,
+  recent orders, top products (top products include stock + threshold).
+- Categories support exactly ONE level of subcategories.
+
+## Testing locally (this sandbox)
+- Run the API on the sandbox port (e.g. `PORT=12001 node src/index.js`) with a
+  local Postgres; the sandbox proxy forwards `/api` to it.
+- Backend suite: `python3 /tmp/apitest/test.py` → expects 175 passed / 0 failed.
+  Point it at whichever host/port the API is on.
+- Verify the real deployment with Docker Compose, not just the dev harness: the
+  dev harness serves static files as a privileged user and will NOT reproduce the
+  nginx 403 permission bug.
 
 ## Workflow Rules (standing)
-1. **Always push to git after changes** (`git push`)
-2. Keep brand design tokens consistent: Playfair Serif headings, `--color-brand` pink/red, soft beige background
-3. When changing order schema, update `ORDER_STATUSES` constant AND admin/frontend renderers
-4. quote dotenv values containing `#`
-
-## Testing Locally (this sandbox)
-- Backend runs on the external sandbox port (`12001`); sandbox proxy forwards `/api` there, so source code must ALWAYS use the auto-detect snippet at the top of each page (see Stack section) — direct hostnames are a footgun
-- `product.html?id=N` page needs an extra ID check — renders blank if product fetch fails or JS has template literal issues
-- When testing browser-side: register a user, add to cart (localStorage), then buy-now — sessionStorage carries items to checkout.html
+1. Always push to git after changes (`git push`); branch is `release/v2`.
+2. Keep brand tokens consistent: Playfair Serif headings, maroon/gold/cream/muted
+   rose palette, soft beige background. Admin console prioritises usability.
+3. When changing the order schema, update the status list AND all admin/frontend
+   renderers.
+4. Quote dotenv values containing `#`.
