@@ -1,0 +1,18 @@
+# Root .dockerignore - applies to any build context under this repo.
+**/node_modules
+**/npm-debug.log*
+**/.DS_Store
+**/.git
+**/.gitignore
+**/.env
+**/.env.*
+!.env.example
+**/uploads
+**/coverage
+**/.nyc_output
+**/*.log
+**/.vscode
+**/.idea
+docker-compose*.yml
+docker-compose*.yaml
+README.md

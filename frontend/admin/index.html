@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Admin Console — Zaraz Boutique</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/admin.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%236b1f2e'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='19' font-style='italic' fill='%23e3c988' text-anchor='middle'%3EZ%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar" data-sidebar>
+      <div class="sidebar-brand">
+        <div class="logo">Z</div>
+        <div>
+          <strong>Zaraz Boutique</strong>
+          <span>Admin console</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-label">Overview</div>
+        <a href="#dashboard" data-nav="dashboard" class="active" data-icon="dashboard">Dashboard</a>
+        <div class="nav-label">Catalogue</div>
+        <a href="#products" data-nav="products" data-icon="products">Products</a>
+        <a href="#categories" data-nav="categories" data-icon="categories">Categories</a>
+        <a href="#inventory" data-nav="inventory" data-icon="inventory">Inventory</a>
+        <div class="nav-label">Sales</div>
+        <a href="#orders" data-nav="orders" data-icon="orders">Orders <span class="pill hidden" data-pending-pill></span></a>
+        <a href="#customers" data-nav="customers" data-icon="customers">Customers</a>
+        <div class="nav-label">Inbox</div>
+        <a href="#messages" data-nav="messages" data-icon="messages">Messages <span class="pill hidden" data-messages-pill></span></a>
+      </nav>
+
+      <div class="sidebar-foot">
+        <div class="sidebar-user">
+          <div class="avatar" data-admin-initial>A</div>
+          <div>
+            <strong data-admin-name>Admin</strong>
+            <span data-admin-email>—</span>
+          </div>
+        </div>
+        <button class="btn btn-ghost" type="button" data-logout>Sign out</button>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <button class="icon-btn sidebar-toggle" type="button" data-sidebar-toggle aria-label="Toggle navigation"></button>
+        <h1 data-page-title>Dashboard</h1>
+        <div class="topbar-actions">
+          <a class="btn btn-outline btn-sm" href="../index.html" target="_blank" rel="noopener">View storefront ↗</a>
+        </div>
+      </header>
+
+      <main class="content">
+        <section class="view active" data-view="dashboard"></section>
+        <section class="view" data-view="products"></section>
+        <section class="view" data-view="categories"></section>
+        <section class="view" data-view="inventory"></section>
+        <section class="view" data-view="orders"></section>
+        <section class="view" data-view="customers"></section>
+        <section class="view" data-view="messages"></section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Product create/edit modal -->
+  <div class="modal-backdrop" id="product-modal">
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <h2 data-product-modal-title>Add product</h2>
+        <button class="icon-btn close" type="button" data-close-modal="product-modal" aria-label="Close"></button>
+      </div>
+      <form data-product-form novalidate>
+        <div class="modal-body">
+          <div class="alert alert-error hidden" data-form-alert role="alert"></div>
+          <input type="hidden" name="id" />
+
+          <div class="form-row">
+            <div class="field">
+              <label for="p-name">Product name <span class="req">*</span></label>
+              <input class="input" id="p-name" name="name" required placeholder="Rajwadi Crimson Banarasi Silk Saree" />
+              <div class="field-error"></div>
+            </div>
+            <div class="field">
+              <label for="p-sku">SKU</label>
+              <input class="input" id="p-sku" name="sku" placeholder="ZB-1099" />
+              <div class="field-error"></div>
+            </div>
+          </div>
+
+          <div class="form-row-3">
+            <div class="field">
+              <label for="p-category">Category</label>
+              <select class="select" id="p-category" name="category_id" data-category-select></select>
+              <div class="field-error"></div>
+            </div>
+            <div class="field">
+              <label for="p-fabric">Fabric</label>
+              <input class="input" id="p-fabric" name="fabric" placeholder="Pure Katan Silk" />
+              <div class="field-error"></div>
+            </div>
+            <div class="field">
+              <label for="p-stock">Stock <span class="req">*</span></label>
+              <input class="input" id="p-stock" name="stock" type="number" min="0" required value="0" />
+              <div class="field-error"></div>
+            </div>
+          </div>
+
+          <div class="form-row-3">
+            <div class="field">
+              <label for="p-price">Price (₹) <span class="req">*</span></label>
+              <input class="input" id="p-price" name="price" type="number" min="0" step="1" required placeholder="12499" />
+              <div class="field-error"></div>
+            </div>
+            <div class="field">
+              <label for="p-compare">Compare-at price (₹)</label>
+              <input class="input" id="p-compare" name="compare_at_price" type="number" min="0" step="1" placeholder="15999" />
+              <div class="field-error"></div>
+            </div>
+            <div class="field">
+              <label for="p-threshold">Low stock alert at</label>
+              <input class="input" id="p-threshold" name="low_stock_threshold" type="number" min="0" value="5" />
+              <div class="field-error"></div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="p-description">Description</label>
+            <textarea class="textarea" id="p-description" name="description" placeholder="Describe the weave, work and occasion…" maxlength="4000"></textarea>
+            <div class="field-error"></div>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label for="p-sizes">Sizes / blouse</label>
+              <div class="chip-input" data-chip-input="sizes">
+                <input type="text" placeholder="Type a size and press Enter" data-chip-entry />
+              </div>
+              <div class="field-error"></div>
+            </div>
+            <div class="field">
+              <label for="p-colors">Colours</label>
+              <div class="chip-input" data-chip-input="colors">
+                <input type="text" placeholder="Type a colour and press Enter" data-chip-entry />
+              </div>
+              <div class="field-error"></div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Images</label>
+            <div class="image-list" data-image-list></div>
+            <div class="flex gap-8 wrap items-center">
+              <input class="input" type="url" placeholder="Paste an image URL and press Enter" data-image-url style="flex:1;min-width:200px" />
+              <button class="btn btn-outline btn-sm" type="button" data-image-add>Add URL</button>
+              <label class="btn btn-outline btn-sm" style="margin:0">
+                Upload <input type="file" accept="image/*" multiple hidden data-image-upload />
+              </label>
+            </div>
+            <p class="small muted" style="margin:8px 0 0">The first image is used as the product thumbnail. Uploads are stored by the configured storage driver.</p>
+          </div>
+
+          <div class="flex gap-12 wrap" style="margin-top:4px">
+            <label class="check"><input type="checkbox" name="is_featured" /> Featured</label>
+            <label class="check"><input type="checkbox" name="is_new_arrival" /> New arrival</label>
+            <label class="check"><input type="checkbox" name="is_bestseller" /> Bestseller</label>
+            <label class="check"><input type="checkbox" name="is_active" checked /> Active (visible in store)</label>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn btn-outline" type="button" data-close-modal="product-modal">Cancel</button>
+          <button class="btn btn-primary" type="submit" data-product-submit>Save product</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Category create/edit modal -->
+  <div class="modal-backdrop" id="category-modal">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 data-category-modal-title>Add category</h2>
+        <button class="icon-btn close" type="button" data-close-modal="category-modal" aria-label="Close"></button>
+      </div>
+      <form data-category-form novalidate>
+        <div class="modal-body">
+          <div class="alert alert-error hidden" data-form-alert role="alert"></div>
+          <input type="hidden" name="id" />
+          <div class="field">
+            <label for="c-name">Category name <span class="req">*</span></label>
+            <input class="input" id="c-name" name="name" required placeholder="Banarasi Silk" />
+            <div class="field-error"></div>
+          </div>
+          <div class="field">
+            <label for="c-parent">Parent category</label>
+            <select class="select" id="c-parent" name="parent_id" data-parent-select></select>
+            <p class="small muted" style="margin:6px 0 0">Subcategories are supported one level deep.</p>
+            <div class="field-error"></div>
+          </div>
+          <div class="field">
+            <label for="c-description">Description</label>
+            <textarea class="textarea" id="c-description" name="description" placeholder="What makes this weave special?"></textarea>
+            <div class="field-error"></div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label for="c-sort">Sort order</label>
+              <input class="input" id="c-sort" name="sort_order" type="number" value="0" />
+              <div class="field-error"></div>
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <label class="check"><input type="checkbox" name="is_active" checked /> Active</label>
+            </div>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn btn-outline" type="button" data-close-modal="category-modal">Cancel</button>
+          <button class="btn btn-primary" type="submit">Save category</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Order detail modal -->
+  <div class="modal-backdrop" id="order-modal">
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <h2>Order details</h2>
+        <button class="icon-btn close" type="button" data-close-modal="order-modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" data-order-detail></div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" type="button" data-close-modal="order-modal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Customer detail modal -->
+  <div class="modal-backdrop" id="customer-modal">
+    <div class="modal modal-wide">
+      <div class="modal-head">
+        <h2>Customer details</h2>
+        <button class="icon-btn close" type="button" data-close-modal="customer-modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" data-customer-detail></div>
+      <div class="modal-foot">
+        <button class="btn btn-outline" type="button" data-close-modal="customer-modal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stock adjust modal -->
+  <div class="modal-backdrop" id="stock-modal">
+    <div class="modal" style="max-width:440px">
+      <div class="modal-head">
+        <h2>Adjust stock</h2>
+        <button class="icon-btn close" type="button" data-close-modal="stock-modal" aria-label="Close"></button>
+      </div>
+      <form data-stock-form novalidate>
+        <div class="modal-body">
+          <div class="alert alert-error hidden" data-form-alert role="alert"></div>
+          <input type="hidden" name="product_id" />
+          <p class="muted small" data-stock-product></p>
+          <div class="form-row">
+            <div class="field">
+              <label for="s-set">Set stock to</label>
+              <input class="input" id="s-set" name="stock" type="number" min="0" placeholder="Leave blank to use adjustment" />
+              <div class="field-error"></div>
+            </div>
+            <div class="field">
+              <label for="s-delta">Adjust by</label>
+              <input class="input" id="s-delta" name="delta" type="number" placeholder="e.g. -2 or 10" />
+              <div class="field-error"></div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn btn-outline" type="button" data-close-modal="stock-modal">Cancel</button>
+          <button class="btn btn-primary" type="submit">Update stock</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="assets/js/admin-api.js"></script>
+  <script src="assets/js/admin-ui.js"></script>
+  <script src="assets/js/pages/dashboard.js"></script>
+  <script src="assets/js/pages/products.js"></script>
+  <script src="assets/js/pages/categories.js"></script>
+  <script src="assets/js/pages/orders.js"></script>
+  <script src="assets/js/pages/customers.js"></script>
+  <script src="assets/js/pages/inventory.js"></script>
+  <script src="assets/js/pages/messages.js"></script>
+  <script src="assets/js/pages/console.js"></script>
+</body>
+</html>

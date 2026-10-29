@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign In — Zaraz Boutique</title>
+  <meta name="description" content="Sign in to your Zaraz Boutique account to track orders and manage addresses." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%236b1f2e'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='19' font-style='italic' fill='%23e3c988' text-anchor='middle'%3EZ%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <div data-header></div>
+
+  <main>
+    <div class="container">
+      <div class="auth-wrap">
+        <div class="auth-card">
+          <span class="eyebrow">Welcome back</span>
+          <h1>Sign in</h1>
+          <p>Access your bag, orders and saved addresses.</p>
+
+          <div class="alert alert-error hidden" data-form-alert role="alert"></div>
+
+          <form data-login-form novalidate>
+            <div class="field">
+              <label for="login-email">Email address <span class="req">*</span></label>
+              <input class="input" id="login-email" name="email" type="email" required autocomplete="email" placeholder="you@example.com" />
+              <div class="field-error"></div>
+            </div>
+            <div class="field">
+              <label for="login-password">Password <span class="req">*</span></label>
+              <input class="input" id="login-password" name="password" type="password" required autocomplete="current-password" placeholder="Your password" />
+              <div class="field-error"></div>
+            </div>
+            <button class="btn btn-primary btn-block btn-lg" type="submit">Sign in</button>
+          </form>
+
+          <p class="auth-switch">New to Zaraz? <a href="register.html">Create an account</a></p>
+          <p class="auth-switch small muted" style="margin-top:8px">
+            Demo shopper: <strong>priya@example.com</strong> / <strong>Customer@123</strong>
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div data-footer></div>
+
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/ui.js"></script>
+  <script src="assets/js/store.js"></script>
+  <script src="assets/js/pages/auth.js"></script>
+</body>
+</html>

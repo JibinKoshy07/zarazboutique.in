@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shop All Sarees — Zaraz Boutique</title>
+  <meta name="description" content="Browse the full Zaraz Boutique saree collection with filters for category, price, fabric and availability." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%236b1f2e'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='19' font-style='italic' fill='%23e3c988' text-anchor='middle'%3EZ%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <div data-header></div>
+
+  <main>
+    <div class="container container-wide">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="index.html">Home</a><span class="sep">/</span><span>Shop</span>
+      </nav>
+
+      <div class="section-head left" style="margin-bottom:28px">
+        <span class="eyebrow">The collection</span>
+        <h1 style="font-size:clamp(1.9rem,3.6vw,2.7rem)">All sarees</h1>
+        <p class="muted">Handpicked drapes across silks, cottons and modern designer weaves.</p>
+      </div>
+
+      <div class="chips" data-chips></div>
+
+      <div class="shop-layout">
+        <aside class="filters" aria-label="Filters">
+          <div class="filter-group">
+            <h4>Search</h4>
+            <input class="input" type="search" placeholder="Search sarees…" data-search-input aria-label="Search sarees" />
+          </div>
+          <div class="filter-group">
+            <h4>Categories</h4>
+            <ul class="filter-list" data-category-filters></ul>
+          </div>
+          <div class="filter-group">
+            <h4>Price</h4>
+            <ul class="filter-list" data-price-filters>
+              <li><label><input type="radio" name="price" value="" checked /> All prices</label></li>
+              <li><label><input type="radio" name="price" value="0-3000" /> Under ₹3,000</label></li>
+              <li><label><input type="radio" name="price" value="3000-7000" /> ₹3,000 – ₹7,000</label></li>
+              <li><label><input type="radio" name="price" value="7000-15000" /> ₹7,000 – ₹15,000</label></li>
+              <li><label><input type="radio" name="price" value="15000-" /> Above ₹15,000</label></li>
+            </ul>
+          </div>
+          <div class="filter-group">
+            <h4>Availability</h4>
+            <ul class="filter-list">
+              <li><label><input type="checkbox" data-flag="inStock" /> In stock only</label></li>
+              <li><label><input type="checkbox" data-flag="new" /> New arrivals</label></li>
+              <li><label><input type="checkbox" data-flag="bestseller" /> Bestsellers</label></li>
+            </ul>
+          </div>
+          <div class="filter-group">
+            <button class="btn btn-ghost btn-block btn-sm" type="button" data-clear-filters>Clear all filters</button>
+          </div>
+        </aside>
+
+        <div>
+          <div class="shop-toolbar">
+            <span class="result-count" data-result-count>Loading…</span>
+            <label class="sr-only" for="sort-select">Sort by</label>
+            <select class="select" id="sort-select" data-sort>
+              <option value="newest">Newest first</option>
+              <option value="price_asc">Price: low to high</option>
+              <option value="price_desc">Price: high to low</option>
+              <option value="name_asc">Name: A to Z</option>
+              <option value="rating">Top rated</option>
+              <option value="popular">Most popular</option>
+            </select>
+          </div>
+          <div class="product-grid" data-products></div>
+          <div class="pagination" data-pagination></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div data-footer></div>
+
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/ui.js"></script>
+  <script src="assets/js/store.js"></script>
+  <script src="assets/js/pages/shop.js"></script>
+</body>
+</html>

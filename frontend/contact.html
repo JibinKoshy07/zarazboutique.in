@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Contact Us — Zaraz Boutique</title>
+  <meta name="description" content="Get in touch with Zaraz Boutique for styling advice, order help and bulk enquiries." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%236b1f2e'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='19' font-style='italic' fill='%23e3c988' text-anchor='middle'%3EZ%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <div data-header></div>
+
+  <main>
+    <div class="container container-wide">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="index.html">Home</a><span class="sep">/</span><span>Contact</span>
+      </nav>
+
+      <div class="section-head left" style="margin-bottom:30px">
+        <span class="eyebrow">We would love to help</span>
+        <h1 style="font-size:clamp(1.8rem,3.4vw,2.5rem)">Get in touch</h1>
+        <p class="muted">Questions about a weave, an order, or a wedding trousseau? Write to us and we will reply within one working day.</p>
+      </div>
+
+      <div class="split" style="grid-template-columns:1fr 380px">
+        <div class="panel">
+          <div class="panel-head"><h3>Send us a message</h3></div>
+          <div class="alert alert-success hidden" data-form-alert role="alert"></div>
+          <form data-contact-form novalidate>
+            <div class="form-row">
+              <div class="field">
+                <label for="ct-name">Your name <span class="req">*</span></label>
+                <input class="input" id="ct-name" name="name" required autocomplete="name" />
+                <div class="field-error"></div>
+              </div>
+              <div class="field">
+                <label for="ct-email">Email address <span class="req">*</span></label>
+                <input class="input" id="ct-email" name="email" type="email" required autocomplete="email" />
+                <div class="field-error"></div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="field">
+                <label for="ct-phone">Phone</label>
+                <input class="input" id="ct-phone" name="phone" autocomplete="tel" placeholder="+91 98765 43210" />
+                <div class="field-error"></div>
+              </div>
+              <div class="field">
+                <label for="ct-subject">Subject</label>
+                <input class="input" id="ct-subject" name="subject" placeholder="Order enquiry, styling help…" />
+                <div class="field-error"></div>
+              </div>
+            </div>
+            <div class="field">
+              <label for="ct-message">Message <span class="req">*</span></label>
+              <textarea class="textarea" id="ct-message" name="message" required placeholder="Tell us how we can help…" maxlength="2000"></textarea>
+              <div class="field-error"></div>
+            </div>
+            <button class="btn btn-primary btn-lg" type="submit">Send message</button>
+          </form>
+        </div>
+
+        <aside>
+          <div class="panel">
+            <h3>Visit the boutique</h3>
+            <div class="detail-notes">
+              <div class="detail-note"><span style="color:var(--gold-deep)">📍</span><span>14 Rose Garden Lane, Alwarpet, Chennai 600018, Tamil Nadu</span></div>
+              <div class="detail-note"><span style="color:var(--gold-deep)">📞</span><span>+91 44 4000 1998</span></div>
+              <div class="detail-note"><span style="color:var(--gold-deep)">✉️</span><span>care@zarazboutique.in</span></div>
+              <div class="detail-note"><span style="color:var(--gold-deep)">🕑</span><span>Open daily, 10:00 am – 8:00 pm</span></div>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Order support</h3>
+            <p class="muted small">Already placed an order? Track its status any time from your account.</p>
+            <a class="btn btn-outline btn-block" href="account.html?tab=orders">Track my order</a>
+          </div>
+          <div class="panel">
+            <h3>Shipping &amp; returns</h3>
+            <ul class="muted small" style="display:grid;gap:8px">
+              <li>• Free shipping on orders above ₹4,999.</li>
+              <li>• Dispatched within 24 hours, delivered in 3–6 days.</li>
+              <li>• 7-day returns on unused sarees with tags intact.</li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <div data-footer></div>
+
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/ui.js"></script>
+  <script src="assets/js/store.js"></script>
+  <script src="assets/js/pages/contact.js"></script>
+</body>
+</html>

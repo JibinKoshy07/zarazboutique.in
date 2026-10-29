@@ -1,0 +1,65 @@
+# Zaraz Boutique web server.
+#
+# The storefront and admin console are plain static files, so they are served
+# directly. All API traffic is proxied to the backend service, which means the
+# frontend always calls the same-origin `/api` path - no host is ever hard-coded.
+
+server {
+    listen 80;
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Basic hardening.
+    server_tokens off;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    client_max_body_size 8m;
+    gzip on;
+    gzip_types text/plain text/css application/javascript application/json image/svg+xml;
+    gzip_min_length 512;
+
+    # Health probe for Docker/Compose.
+    location = /healthz {
+        access_log off;
+        add_header Content-Type text/plain;
+        return 200 "ok\n";
+    }
+
+    # API + uploaded images are forwarded to the backend service.
+    location /api/ {
+        proxy_pass ${API_UPSTREAM};
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 60s;
+    }
+
+    location /uploads/ {
+        proxy_pass ${API_UPSTREAM};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        expires 7d;
+        add_header Cache-Control "public, max-age=604800";
+    }
+
+    # Hashed/static assets are safe to cache aggressively.
+    location ~* \.(?:css|js|woff2?|ttf|svg|png|jpe?g|webp|avif|gif|ico)$ {
+        expires 7d;
+        add_header Cache-Control "public, max-age=604800";
+        try_files $uri =404;
+    }
+
+    # Pretty URLs: /shop -> /shop.html
+    location / {
+        try_files $uri $uri.html $uri/ /index.html;
+    }
+}

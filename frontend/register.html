@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Create Account — Zaraz Boutique</title>
+  <meta name="description" content="Create your Zaraz Boutique account to shop handpicked Indian sarees." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%236b1f2e'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='19' font-style='italic' fill='%23e3c988' text-anchor='middle'%3EZ%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <div data-header></div>
+
+  <main>
+    <div class="container">
+      <div class="auth-wrap">
+        <div class="auth-card">
+          <span class="eyebrow">Join Zaraz</span>
+          <h1>Create your account</h1>
+          <p>Save your addresses, track orders and check out faster.</p>
+
+          <div class="alert alert-error hidden" data-form-alert role="alert"></div>
+
+          <form data-register-form novalidate>
+            <div class="field">
+              <label for="reg-name">Full name <span class="req">*</span></label>
+              <input class="input" id="reg-name" name="name" required autocomplete="name" placeholder="Priya Sharma" />
+              <div class="field-error"></div>
+            </div>
+            <div class="field">
+              <label for="reg-email">Email address <span class="req">*</span></label>
+              <input class="input" id="reg-email" name="email" type="email" required autocomplete="email" placeholder="you@example.com" />
+              <div class="field-error"></div>
+            </div>
+            <div class="field">
+              <label for="reg-phone">Phone</label>
+              <input class="input" id="reg-phone" name="phone" autocomplete="tel" placeholder="+91 98765 43210" />
+              <div class="field-error"></div>
+            </div>
+            <div class="field">
+              <label for="reg-password">Password <span class="req">*</span></label>
+              <input class="input" id="reg-password" name="password" type="password" required autocomplete="new-password" placeholder="At least 8 characters" />
+              <div class="field-error"></div>
+            </div>
+            <div class="field">
+              <label for="reg-confirm">Confirm password <span class="req">*</span></label>
+              <input class="input" id="reg-confirm" name="confirmPassword" type="password" required autocomplete="new-password" placeholder="Re-enter your password" />
+              <div class="field-error"></div>
+            </div>
+            <label class="check" style="margin-bottom:20px">
+              <input type="checkbox" name="terms" required /> I agree to the terms of sale and privacy policy
+            </label>
+            <button class="btn btn-primary btn-block btn-lg" type="submit">Create account</button>
+          </form>
+
+          <p class="auth-switch">Already have an account? <a href="login.html">Sign in</a></p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div data-footer></div>
+
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/ui.js"></script>
+  <script src="assets/js/store.js"></script>
+  <script src="assets/js/pages/auth.js"></script>
+</body>
+</html>

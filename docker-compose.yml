@@ -1,0 +1,138 @@
+name: zaraz-boutique
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL - persistent store for users, products, categories, addresses,
+  # carts and orders. Data lives in the `db-data` named volume.
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: zaraz-pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-zaraz_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-zaraz_password}
+      POSTGRES_DB: ${DB_NAME:-zaraz}
+      # Deterministic collation keeps text sorting identical across machines.
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      # Exposed for local inspection only; remove in a hardened deployment.
+      - "${DB_PORT_HOST:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-zaraz_user} -d ${DB_NAME:-zaraz}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - zaraz
+
+  # ---------------------------------------------------------------------------
+  # API - Express + pg. On boot it waits for the database, applies migrations,
+  # seeds default data and then serves /api.
+  # ---------------------------------------------------------------------------
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: zaraz-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 4000
+
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-zaraz}
+      DB_USER: ${DB_USER:-zaraz_user}
+      DB_PASSWORD: ${DB_PASSWORD:-zaraz_password}
+      DB_POOL_MAX: ${DB_POOL_MAX:-10}
+      DB_SSL: "false"
+
+      # Public base URL used to build uploaded-image links. The browser reaches
+      # the API through the web service, so this is the web origin.
+      API_PUBLIC_URL: ${API_PUBLIC_URL:-http://localhost:8080}
+
+      # Auth / security.
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required - copy .env.example to .env}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080}
+
+      # Seeded administrator.
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@zarazboutique.in}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@12345}
+      ADMIN_NAME: ${ADMIN_NAME:-Store Admin}
+      SEED_ON_START: ${SEED_ON_START:-true}
+      DEMO_CUSTOMER_PASSWORD: ${DEMO_CUSTOMER_PASSWORD:-Customer@123}
+
+      # Storage + payments (gateway-ready, no live provider yet).
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
+      UPLOAD_DIR: /app/uploads
+      UPLOAD_MAX_MB: ${UPLOAD_MAX_MB:-5}
+      PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-manual}
+      PAYMENT_CURRENCY: ${PAYMENT_CURRENCY:-INR}
+      PAYMENT_COD_ENABLED: ${PAYMENT_COD_ENABLED:-true}
+      PAYMENT_UPI_ENABLED: ${PAYMENT_UPI_ENABLED:-true}
+      PAYMENT_CARD_ENABLED: ${PAYMENT_CARD_ENABLED:-true}
+      PAYMENT_UPI_VPA: ${PAYMENT_UPI_VPA:-zarazboutique@upi}
+
+      CONTACT_FORM_EMAIL: ${CONTACT_FORM_EMAIL:-support@zarazboutique.in}
+      SHIPPING_FLAT_RATE: ${SHIPPING_FLAT_RATE:-0}
+      SHIPPING_FREE_ABOVE: ${SHIPPING_FREE_ABOVE:-0}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-300}
+      AUTH_RATE_LIMIT_MAX: ${AUTH_RATE_LIMIT_MAX:-30}
+    volumes:
+      # Uploaded product images survive rebuilds.
+      - uploads-data:/app/uploads
+    ports:
+      # Optional direct API access for debugging; the web service is the front door.
+      - "${API_PORT_HOST:-4000}:4000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:4000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    networks:
+      - zaraz
+
+  # ---------------------------------------------------------------------------
+  # Web - nginx serving the storefront + admin console and proxying /api.
+  # ---------------------------------------------------------------------------
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: zaraz-web
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      API_UPSTREAM: http://api:4000
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - zaraz
+
+volumes:
+  db-data:
+    name: zaraz-db-data
+  uploads-data:
+    name: zaraz-uploads
+
+networks:
+  zaraz:
+    name: zaraz-network
+    driver: bridge

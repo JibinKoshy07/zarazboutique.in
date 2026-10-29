@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Zaraz Boutique — Handpicked Indian Sarees</title>
+  <meta name="description" content="Zaraz Boutique — premium handpicked Indian sarees. Banarasi silk, Kanjeevaram, handloom cotton, organza and bridal couture, delivered across India." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%236b1f2e'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='19' font-style='italic' fill='%23e3c988' text-anchor='middle'%3EZ%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <div data-header></div>
+
+  <main>
+    <section class="hero">
+      <div class="container container-wide hero-inner">
+        <div class="hero-copy">
+          <span class="eyebrow" style="color:var(--gold-light)">Handpicked weaves · Since 1998</span>
+          <h1>Drape yourself in <em>timeless</em> Indian craft</h1>
+          <p>Six-yard heirlooms woven by artisan clusters in Varanasi, Kanchipuram and Bengal — curated for the woman who wears tradition with ease.</p>
+          <div class="hero-actions">
+            <a class="btn btn-gold btn-lg" href="shop.html">Shop the collection</a>
+            <a class="btn btn-outline btn-lg" href="shop.html?featured=true">Featured sarees</a>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat"><strong>16+</strong><span>Curated weaves</span></div>
+            <div class="hero-stat"><strong>8</strong><span>Craft clusters</span></div>
+            <div class="hero-stat"><strong>4.8★</strong><span>Customer rating</span></div>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <img src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=900&q=80" alt="Model wearing a handwoven Banarasi silk saree" />
+          <div class="hero-badge">
+            <strong>₹4,999+</strong>
+            <span>Free shipping in India</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="value-strip">
+      <div class="container container-wide">
+        <div class="value-grid" data-value-strip></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container container-wide">
+        <div class="section-head">
+          <span class="eyebrow">Shop by weave</span>
+          <h2>Explore our categories</h2>
+          <p>From everyday handloom cottons to once-in-a-lifetime bridal drapes.</p>
+          <div class="title-rule"></div>
+        </div>
+        <div class="category-grid" data-categories></div>
+      </div>
+    </section>
+
+    <section class="section" style="background:var(--cream-deep);border-block:1px solid var(--line)">
+      <div class="container container-wide">
+        <div class="section-head">
+          <span class="eyebrow">Most loved</span>
+          <h2>Bestsellers</h2>
+          <p>The drapes our customers return for, season after season.</p>
+          <div class="title-rule"></div>
+        </div>
+        <div class="product-grid" data-bestsellers></div>
+        <div class="text-center" style="margin-top:38px">
+          <a class="btn btn-outline" href="shop.html?bestseller=true">View all bestsellers</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container container-wide">
+        <div class="section-head">
+          <span class="eyebrow">Just arrived</span>
+          <h2>New arrivals</h2>
+          <p>Fresh off the loom — the newest additions to the Zaraz edit.</p>
+          <div class="title-rule"></div>
+        </div>
+        <div class="product-grid" data-new-arrivals></div>
+        <div class="text-center" style="margin-top:38px">
+          <a class="btn btn-outline" href="shop.html?new=true">Shop all new arrivals</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-tight">
+      <div class="container container-wide">
+        <div class="newsletter">
+          <div>
+            <span class="eyebrow" style="color:var(--gold-light)">The Zaraz letter</span>
+            <h2>New weaves, first</h2>
+            <p>Join our list for festive edits, styling notes and early access to limited drops.</p>
+          </div>
+          <form class="newsletter-form" data-newsletter>
+            <input class="input" type="email" name="email" placeholder="Your email address" required aria-label="Email address" />
+            <button class="btn" type="submit">Subscribe</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div data-footer></div>
+
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/ui.js"></script>
+  <script src="assets/js/store.js"></script>
+  <script src="assets/js/pages/home.js"></script>
+</body>
+</html>
