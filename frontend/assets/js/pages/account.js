@@ -176,10 +176,10 @@
       <div class="split">
         <aside class="panel" style="position:sticky;top:calc(var(--header-h) + 20px)">
           <div style="text-align:center;padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:14px">
-            <div style="width:58px;height:58px;border-radius:50%;background:var(--maroon);color:var(--gold-light);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:1.5rem;margin:0 auto 10px">
+            <div style="width:58px;height:58px;border-radius:50%;background:var(--brand);color:var(--accent-light);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:1.5rem;margin:0 auto 10px">
               ${escapeHtml((Store.state.user.name || 'Z').charAt(0).toUpperCase())}
             </div>
-            <strong style="display:block;color:var(--maroon-deep)">${escapeHtml(Store.state.user.name)}</strong>
+            <strong style="display:block;color:var(--brand-deep)">${escapeHtml(Store.state.user.name)}</strong>
             <span class="small muted">${escapeHtml(Store.state.user.email)}</span>
           </div>
           <nav class="account-nav">
