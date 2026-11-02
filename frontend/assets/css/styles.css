@@ -225,7 +225,9 @@ ul { margin: 0; padding: 0; list-style: none; }
 .hero-inner {
   position: relative; z-index: 2;
   display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 48px; align-items: center;
-  padding: 78px 0 84px;
+  /* Vertical padding only. The shorthand would reset .container's side padding
+     to 0 and push the copy flush against the viewport edge. */
+  padding-block: 78px 84px;
 }
 .hero-copy h1 { color: var(--cream); margin-bottom: 18px; }
 .hero-copy h1 em { font-style: italic; color: var(--accent-light); }
@@ -240,7 +242,10 @@ ul { margin: 0; padding: 0; list-style: none; }
 
 .hero-visual { position: relative; }
 .hero-visual img {
-  width: 100%; aspect-ratio: 4 / 5; object-fit: cover;
+  /* height:auto is required: the img carries a height="1125" attribute, whose
+     presentational hint is a definite height that would win over aspect-ratio
+     and leave the banner 1125px tall on a phone. */
+  width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: cover;
   border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
 }
 .hero-badge {
@@ -740,7 +745,7 @@ tbody tr:hover { background: rgba(244, 237, 225, 0.4); }
 .order-card-foot { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; padding-top: 14px; border-top: 1px solid var(--line); }
 
 @media (max-width: 1080px) {
-  .hero-inner { grid-template-columns: 1fr; gap: 40px; padding: 54px 0 62px; }
+  .hero-inner { grid-template-columns: 1fr; gap: 40px; padding-block: 54px 62px; }
   .hero-visual { max-width: 460px; }
   .value-grid { grid-template-columns: repeat(2, 1fr); }
   .shop-layout { grid-template-columns: 1fr; }
@@ -779,6 +784,7 @@ tbody tr:hover { background: rgba(244, 237, 225, 0.4); }
 
 @media (max-width: 560px) {
   .value-grid { grid-template-columns: 1fr; }
+  .hero-visual { max-width: 300px; margin-inline: auto; }
   .product-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
   .product-body { padding: 13px 13px 15px; }
   .product-name { font-size: 0.94rem; }
