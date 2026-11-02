@@ -14,7 +14,7 @@
         <div class="order-ref">Order ${escapeHtml(order.orderNumber)}</div>
       </div>
 
-      <div class="split" style="grid-template-columns:1fr 340px">
+      <div class="split split-sidebar">
         <div>
           <div class="panel">
             <div class="panel-head">

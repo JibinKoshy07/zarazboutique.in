@@ -253,6 +253,10 @@ img { max-width: 100%; display: block; }
 
 .grid-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; align-items: start; }
 .grid-2-even { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+/* Grid/flex children default to min-width:auto, which lets a wide table inside
+   .table-wrap stretch its card instead of scrolling. Let them shrink so the
+   table's own overflow-x can take over on narrow screens. */
+.grid-2 > *, .grid-2-even > * { min-width: 0; }
 
 /* ------------------------------- tables ---------------------------------- */
 
@@ -410,6 +414,7 @@ td.actions .btn { margin-right: 4px; }
 
 @media (max-width: 620px) {
   .form-row, .form-row-3 { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: 1fr; }
   .stat .stat-value { font-size: 1.5rem; }
   .toolbar .search { max-width: none; }
   .modal-backdrop { padding: 16px 12px; }

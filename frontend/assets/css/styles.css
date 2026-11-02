@@ -715,6 +715,12 @@ tbody tr:hover { background: rgba(244, 237, 225, 0.4); }
 .alert-info { background: var(--cream-deep); color: var(--ink-soft); border-color: var(--line); }
 
 .split { display: grid; grid-template-columns: 220px 1fr; gap: 34px; align-items: start; }
+/* Two-column variants. The ratio lives here (not in inline styles) so the
+   breakpoints below can collapse them; a fixed track in an inline style would
+   win over the media query and force horizontal scrolling on phones. */
+.split-sidebar { grid-template-columns: minmax(0, 1fr) 380px; }
+.split-even { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.product-grid-fit { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
 .account-nav { display: grid; gap: 4px; }
 .account-nav button {
   text-align: left; padding: 12px 16px; border: none; background: transparent; cursor: pointer;
@@ -743,6 +749,7 @@ tbody tr:hover { background: rgba(244, 237, 225, 0.4); }
   .summary { position: static; }
   .product-detail { grid-template-columns: 1fr; gap: 34px; }
   .split { grid-template-columns: 1fr; }
+  .split-sidebar, .split-even { grid-template-columns: minmax(0, 1fr); }
   .newsletter { grid-template-columns: 1fr; padding: 38px 26px; }
   .footer-grid { grid-template-columns: 1fr 1fr; }
 }

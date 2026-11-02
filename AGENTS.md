@@ -28,6 +28,19 @@ sandbox URL) — a hardcoded URL breaks local dev whenever sandbox code is pulle
      `nginx` worker cannot read → the site returns **403**. The frontend
      Dockerfile runs `chmod -R a+rX /usr/share/nginx/html` as a safety net; also
      keep repo files `a+r` (`find . -type f -exec chmod a+r {} +`).
+- ⚠ **Never put a static asset behind a URL containing `/api`.** Production
+  (Cloudflare in front of this app) proxies *any* path containing the substring
+  `/api` to the backend, which answers with a JSON 404 — so a script named
+  `assets/js/api.js` was served as `application/json` and blocked by
+  `X-Content-Type-Options: nosniff`. The storefront client therefore lives at
+  `frontend/assets/js/client.js` (global `window.API`). Keep new assets out of
+  `/api*` paths.
+- ⚠ **Don't set `grid-template-columns` in an inline `style`.** An inline rule
+  beats the media queries in `styles.css`/`admin.css`, so the layout can't
+  collapse and phones scroll sideways. Use the responsive classes instead
+  (`.split-sidebar`, `.split-even`, `.product-grid-fit`) and keep `min-width: 0`
+  on grid children so `.table-wrap` can scroll its table rather than stretch the
+  card.
 
 ## Layout
 - `backend/src/modules/*` — service layer (auth, users, products, categories,
