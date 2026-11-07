@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const compression = require('compression');
@@ -52,7 +53,19 @@ const createApp = () => {
   });
 
   // Uploaded product images are served straight off disk in the local driver.
-  app.use(env.storage.publicPath, express.static(env.storage.uploadDir, { maxAge: '7d' }));
+  // Express 4's bundled `send`/`mime@1.6` predates AVIF, so .avif files would be
+  // sent as application/octet-stream and blocked by `nosniff`; map it explicitly.
+  app.use(
+    env.storage.publicPath,
+    express.static(env.storage.uploadDir, {
+      maxAge: '7d',
+      setHeaders: (res, filePath) => {
+        if (path.extname(filePath).toLowerCase() === '.avif') {
+          res.setHeader('Content-Type', 'image/avif');
+        }
+      },
+    })
+  );
 
   app.use(attachAuth);
   app.use('/api', apiLimiter);

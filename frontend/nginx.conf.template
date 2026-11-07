@@ -42,7 +42,10 @@ server {
         proxy_read_timeout 60s;
     }
 
-    location /uploads/ {
+    # `^~` is required: the static-asset regex location below also matches
+    # image extensions and would otherwise win, making nginx look for the file
+    # on the web container's disk (where uploads do not live) and answer 404.
+    location ^~ /uploads/ {
         proxy_pass ${API_UPSTREAM};
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;

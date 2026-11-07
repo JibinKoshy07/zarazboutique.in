@@ -20,7 +20,7 @@ sandbox URL) — a hardcoded URL breaks local dev whenever sandbox code is pulle
   `web` (`zaraz-web`). Volumes `zaraz-db-data`, `zaraz-uploads`.
 - Compose requires `JWT_SECRET` (`.env.example` → `.env`).
 - Docker needs sudo in this sandbox: `sudo docker ps`, `sudo docker compose …`.
-- ⚠ Two footguns that broke the build once — keep them fixed:
+- ⚠ Four footguns that broke the build/runtime once — keep them fixed:
   1. `frontend/.dockerignore` must NOT ignore `nginx.conf.template` (the web
      Dockerfile copies it to `/etc/nginx/templates/`). It is intentionally absent
      from that file.
@@ -28,6 +28,16 @@ sandbox URL) — a hardcoded URL breaks local dev whenever sandbox code is pulle
      `nginx` worker cannot read → the site returns **403**. The frontend
      Dockerfile runs `chmod -R a+rX /usr/share/nginx/html` as a safety net; also
      keep repo files `a+r` (`find . -type f -exec chmod a+r {} +`).
+  3. `location /uploads/` in `nginx.conf.template` MUST stay `location ^~ /uploads/`.
+     The static-asset regex location (`\.(css|js|...|avif|...)$`) also matches
+     image extensions and, because regex locations outrank plain prefix ones,
+     it would win — nginx then looks for the file on the *web* container's disk
+     (uploads live on the *api* volume) and answers its own 404 (`text/html`,
+     ~146 B). Symptom: upload succeeds but the returned image URL 404s.
+  4. Express 4's bundled `send`/`mime@1.6` predates AVIF, so `.avif` uploads
+     would be served as `application/octet-stream` and blocked by `nosniff`.
+     `app.js` sets `Content-Type: image/avif` for `.avif` in `express.static`'s
+     `setHeaders`. Keep that mapping when touching static serving.
 - ⚠ **Never put a static asset behind a URL containing `/api`.** Production
   (Cloudflare in front of this app) proxies *any* path containing the substring
   `/api` to the backend, which answers with a JSON 404 — so a script named
