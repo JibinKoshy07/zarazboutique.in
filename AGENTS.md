@@ -51,6 +51,13 @@ sandbox URL) — a hardcoded URL breaks local dev whenever sandbox code is pulle
   (`.split-sidebar`, `.split-even`, `.product-grid-fit`) and keep `min-width: 0`
   on grid children so `.table-wrap` can scroll its table rather than stretch the
   card.
+- ⚠ **Never put `backdrop-filter` (or `filter`/`transform`/`perspective`/`contain:
+  paint`) on `.site-header`.** Any of those makes the header the *containing
+  block* for `position: fixed` descendants, so the mobile nav drawer
+  (`.nav`, `position: fixed; top:0; bottom:0`) is trapped inside the header bar
+  and clips its own links. The frosted look lives on `.site-header::before`
+  instead — keep it there. Symptom: the mobile menu opens but only shows a sliver
+  of links and cannot scroll.
 
 ## Layout
 - `backend/src/modules/*` — service layer (auth, users, products, categories,

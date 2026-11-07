@@ -72,6 +72,23 @@
     { href: 'contact.html', label: 'Contact' },
   ];
 
+  // The mobile menu panel is only a drawer at <=860px; above that it is the
+  // inline nav, so the open state must be dropped when the viewport grows and
+  // aria-hidden must track the drawer state rather than being hard-coded.
+  const MOBILE_NAV = () => window.matchMedia('(max-width: 860px)').matches;
+
+  const setMenu = (open) => {
+    const nav = document.querySelector('[data-nav]');
+    if (!nav) return;
+    const drawer = MOBILE_NAV();
+    const isOpen = drawer && open;
+    nav.classList.toggle('open', isOpen);
+    nav.setAttribute('aria-hidden', String(drawer && !isOpen));
+    document.querySelector('[data-nav-toggle]').setAttribute('aria-expanded', String(isOpen));
+    const backdrop = document.querySelector('[data-nav-backdrop]');
+    if (backdrop) backdrop.classList.toggle('open', isOpen);
+  };
+
   const mountHeader = () => {
     const host = document.querySelector('[data-header]');
     if (!host) return;
@@ -85,12 +102,15 @@
       <div class="announce">Complimentary shipping across India on orders above ₹4,999 &nbsp;•&nbsp; Handpicked sarees, woven to last</div>
       <header class="site-header">
         <div class="container container-wide header-inner">
-          <button class="icon-btn nav-toggle" type="button" aria-label="Open menu" data-nav-toggle>${ICONS.menu}</button>
+          <button class="icon-btn nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="primary-nav" data-nav-toggle>${ICONS.menu}</button>
           <a class="brand" href="index.html">
             <span class="brand-name">Zaraz</span>
             <span class="brand-tag">Boutique</span>
           </a>
-          <nav class="nav" data-nav>${links}</nav>
+          <nav class="nav" id="primary-nav" data-nav aria-hidden="true" aria-label="Primary">
+            <button class="icon-btn nav-close" type="button" aria-label="Close menu" data-nav-close>${ICONS.close}</button>
+            ${links}
+          </nav>
           <div class="header-actions">
             <button class="icon-btn" type="button" aria-label="Search" data-search-toggle>${ICONS.search}</button>
             <a class="icon-btn" href="account.html" aria-label="My account">${ICONS.user}</a>
@@ -99,15 +119,22 @@
             </button>
           </div>
         </div>
-      </header>`;
+      </header>
+      <div class="nav-backdrop" data-nav-backdrop></div>`;
 
     host.querySelector('[data-nav-toggle]').addEventListener('click', () => {
-      host.querySelector('[data-nav]').classList.toggle('open');
+      setMenu(!host.querySelector('[data-nav]').classList.contains('open'));
     });
     host.querySelector('[data-search-toggle]').addEventListener('click', () => {
       window.location.href = 'shop.html';
     });
     host.querySelector('[data-cart-toggle]').addEventListener('click', openCart);
+    host.querySelector('[data-nav-close]').addEventListener('click', () => setMenu(false));
+    host.querySelector('[data-nav-backdrop]').addEventListener('click', () => setMenu(false));
+    // Normalises aria-hidden for the current viewport: the markup ships with
+    // aria-hidden="true" (correct for the closed mobile drawer) but on desktop
+    // the nav is the visible inline menu and must not be hidden from AT.
+    setMenu(false);
   };
 
   const mountFooter = () => {
@@ -262,7 +289,10 @@
     });
 
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') closeCart();
+      if (event.key === 'Escape') {
+        setMenu(false);
+        closeCart();
+      }
     });
   };
 
@@ -394,6 +424,9 @@
     mountCartDrawer();
     mountAddToCart();
     subscribe(syncChrome);
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 860) setMenu(false);
+    });
     await refresh();
   };
 

@@ -161,9 +161,16 @@ ul { margin: 0; padding: 0; list-style: none; }
 
 .site-header {
   position: sticky; top: 0; z-index: 60;
-  background: rgba(251, 248, 243, 0.94);
-  backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--line);
+}
+/* The frosted background lives on a pseudo-element rather than the header
+   itself: `backdrop-filter` on the header would make it the containing block
+   for `position: fixed` descendants, trapping the mobile nav panel inside the
+   header bar (so it could not span the screen or scroll). */
+.site-header::before {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  background: rgba(251, 248, 243, 0.94);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
 }
 .header-inner {
   display: flex; align-items: center; gap: 22px;
@@ -208,6 +215,14 @@ ul { margin: 0; padding: 0; list-style: none; }
 .icon-btn .badge:empty, .icon-btn .badge[data-count="0"] { display: none; }
 
 .nav-toggle { display: none; }
+.nav-close { display: none; }
+.nav-backdrop {
+  position: fixed; inset: 0; z-index: 90;
+  background: rgba(31, 42, 44, 0.5);
+  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  opacity: 0; pointer-events: none; transition: opacity 0.3s var(--ease);
+}
+.nav-backdrop.open { opacity: 1; pointer-events: auto; }
 
 /* --------------------------------- hero ----------------------------------- */
 
@@ -763,13 +778,21 @@ tbody tr:hover { background: rgba(244, 237, 225, 0.4); }
   .nav {
     position: fixed; top: 0; left: 0; bottom: 0; width: min(300px, 84vw); z-index: 100;
     background: var(--cream); flex-direction: column; align-items: stretch; gap: 0;
-    padding: 80px 22px 22px; box-shadow: var(--shadow-lg);
-    transform: translateX(-100%); transition: transform 0.34s var(--ease);
+    /* Starts below the header row (which sits under the announcement bar), so the
+       panel never hides the brand or the hamburger/close button. */
+    padding: calc(var(--header-h) + 74px) 22px 26px; box-shadow: var(--shadow-lg);
+    overflow-y: auto; overscroll-behavior: contain;
+    /* Keeps the off-screen panel out of the tab order once it has slid away. */
+    visibility: hidden;
+    transition: transform 0.34s var(--ease), visibility 0s linear 0.34s;
   }
-  .nav.open { transform: translateX(0); }
+  .nav.open { transform: translateX(0); visibility: visible; transition: transform 0.34s var(--ease), visibility 0s; }
   .nav a { padding: 14px 10px; border-bottom: 1px solid var(--line); font-size: 1rem; }
   .nav a::after { display: none; }
   .nav-toggle { display: inline-flex; order: -1; }
+  .nav-close {
+    display: inline-flex; position: absolute; top: calc(var(--header-h) + 18px); right: 16px;
+  }
   .brand-name { font-size: 1.45rem; }
   .brand-tag { display: none; }
   .section { padding: 52px 0; }
