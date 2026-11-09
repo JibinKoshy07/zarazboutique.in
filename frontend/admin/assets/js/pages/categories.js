@@ -4,11 +4,26 @@
 
   let categories = [];
   let bound = false;
+  // Single image per category: '' means "use the storefront default".
+  let image = '';
 
   const load = async () => {
     const { categories: list } = await AdminAPI.categories();
     categories = list;
     renderRows();
+  };
+
+  const renderImage = () => {
+    const list = document.querySelector('[data-category-image-list]');
+    const value = document.querySelector('[data-category-image-value]');
+    if (!list || !value) return;
+    value.value = image || '';
+    list.innerHTML = image
+      ? `<div class="image-item">
+           <img src="${escapeHtml(image)}" alt="Category image preview" />
+           <button type="button" data-remove-category-image aria-label="Remove image">✕</button>
+         </div>`
+      : '';
   };
 
   const renderRows = () => {
@@ -27,10 +42,17 @@
     const rowFor = (category, isChild) => `
       <tr>
         <td>
-          <div class="cell-strong" style="${isChild ? 'padding-left:18px;color:var(--a-ink-soft)' : ''}">
-            ${isChild ? '› ' : ''}${escapeHtml(category.name)}
+          <div class="flex gap-12" style="align-items:center">
+            ${category.image
+              ? `<img class="cell-thumb" src="${escapeHtml(category.image)}" alt="" loading="lazy" />`
+              : '<span class="cell-thumb cell-thumb-empty" aria-hidden="true"></span>'}
+            <div style="min-width:0">
+              <div class="cell-strong" style="${isChild ? 'color:var(--a-ink-soft)' : ''}">
+                ${isChild ? '› ' : ''}${escapeHtml(category.name)}
+              </div>
+              ${category.description ? `<div class="cell-sub">${escapeHtml(category.description.slice(0, 80))}</div>` : ''}
+            </div>
           </div>
-          ${category.description ? `<div class="cell-sub">${escapeHtml(category.description.slice(0, 80))}</div>` : ''}
         </td>
         <td class="cell-sub">${isChild ? escapeHtml(category.parentName || '—') : '<span class="badge badge-maroon">Top level</span>'}</td>
         <td>${count(category.productCount)}</td>
@@ -76,10 +98,14 @@
       form.querySelector('[name="description"]').value = category.description || '';
       form.querySelector('[name="sort_order"]').value = category.sortOrder ?? 0;
       form.querySelector('[name="is_active"]').checked = category.isActive !== false;
+      image = category.image || '';
     } else {
       form.querySelector('[name="sort_order"]').value = 0;
       form.querySelector('[name="is_active"]').checked = true;
+      image = '';
     }
+    form.querySelector('[data-category-image-url]').value = '';
+    renderImage();
     modal.open('category-modal');
   };
 
@@ -95,6 +121,7 @@
     const payload = {
       name: values.name.trim(),
       description: values.description ? values.description.trim() : null,
+      image: values.image ? values.image.trim() : null,
       parent_id: values.parent_id ? Number(values.parent_id) : null,
       sort_order: Number(values.sort_order || 0),
       is_active: values.is_active === 'on',
@@ -147,6 +174,46 @@
     });
 
     document.querySelector('[data-category-form]').addEventListener('submit', submit);
+
+    const form = document.querySelector('[data-category-form]');
+
+    form.querySelector('[data-category-image-add]').addEventListener('click', () => {
+      const input = form.querySelector('[data-category-image-url]');
+      const url = input.value.trim();
+      if (!/^https?:\/\//i.test(url)) return toast('Enter a valid image URL starting with http.', 'error');
+      image = url;
+      input.value = '';
+      renderImage();
+    });
+
+    form.querySelector('[data-category-image-url]').addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter') return;
+      event.preventDefault();
+      form.querySelector('[data-category-image-add]').click();
+    });
+
+    form.querySelector('[data-category-image-upload]').addEventListener('change', async (event) => {
+      const [file] = event.target.files || [];
+      if (!file) return;
+      const formData = new FormData();
+      formData.append('images', file);
+      try {
+        const { url } = await AdminAPI.uploadImages(formData);
+        if (url) image = url;
+        renderImage();
+        toast('Category image uploaded.', 'success');
+      } catch (err) {
+        toast(err.message, 'error');
+      } finally {
+        event.target.value = '';
+      }
+    });
+
+    form.querySelector('[data-category-image-list]').addEventListener('click', (event) => {
+      if (!event.target.closest('[data-remove-category-image]')) return;
+      image = '';
+      renderImage();
+    });
   };
 
   const render = async (host) => {

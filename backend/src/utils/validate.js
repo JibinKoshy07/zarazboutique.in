@@ -67,7 +67,8 @@ const checkoutSchema = z.object({
 
 const categorySchema = z.object({
   name: z.string().trim().min(2, 'Category name is required').max(255),
-  description: z.string().trim().max(1000).optional().or(z.literal('')),
+  description: z.string().trim().max(1000).nullish(),
+  image: z.string().trim().max(1024).nullish(),
   parent_id: z.coerce.number().int().positive().nullable().optional(),
   sort_order: z.coerce.number().int().optional().default(0),
   is_active: z.coerce.boolean().optional().default(true),
@@ -75,13 +76,13 @@ const categorySchema = z.object({
 
 const productSchema = z.object({
   name: z.string().trim().min(2, 'Product name is required').max(255),
-  sku: z.string().trim().max(64).optional().or(z.literal('')),
+  sku: z.string().trim().max(64).nullish(),
   category_id: z.coerce.number().int().positive().nullable().optional(),
-  description: z.string().trim().max(5000).optional().or(z.literal('')),
-  fabric: z.string().trim().max(120).optional().or(z.literal('')),
+  description: z.string().trim().max(5000).nullish(),
+  fabric: z.string().trim().max(120).nullish(),
   price: money,
   compare_at_price: money.optional().nullable(),
-  image: z.string().trim().max(1024).optional().or(z.literal('')),
+  image: z.string().trim().max(1024).nullish(),
   images: z.array(z.string().trim().max(1024)).optional().default([]),
   sizes: z.array(z.string().trim().max(32)).optional().default([]),
   colors: z.array(z.string().trim().max(64)).optional().default([]),
