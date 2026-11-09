@@ -58,6 +58,12 @@ sandbox URL) — a hardcoded URL breaks local dev whenever sandbox code is pulle
   and clips its own links. The frosted look lives on `.site-header::before`
   instead — keep it there. Symptom: the mobile menu opens but only shows a sliver
   of links and cannot scroll.
+- ⚠ **The mobile nav backdrop must stay INSIDE `.site-header`.** The header has
+  `z-index: 60`, which makes it a stacking context, so `.nav`'s `z-index: 100`
+  only counts *within* the header. A backdrop placed as a sibling of the header
+  (root context) paints over the whole header — menu included — and its
+  `blur(3px)` smears the links. Inside the header the order is backdrop(1) <
+  `.header-inner`(2) < `.nav`(100), which keeps everything crisp.
 
 ## Layout
 - `backend/src/modules/*` — service layer (auth, users, products, categories,

@@ -175,6 +175,9 @@ ul { margin: 0; padding: 0; list-style: none; }
 .header-inner {
   display: flex; align-items: center; gap: 22px;
   min-height: var(--header-h);
+  /* Above the nav backdrop (z-index 1) so the bar, brand and controls are never
+     dimmed or blurred while the mobile menu is open. */
+  position: relative; z-index: 2;
 }
 
 .brand { display: flex; flex-direction: column; line-height: 1; margin-right: auto; }
@@ -217,7 +220,12 @@ ul { margin: 0; padding: 0; list-style: none; }
 .nav-toggle { display: none; }
 .nav-close { display: none; }
 .nav-backdrop {
-  position: fixed; inset: 0; z-index: 90;
+  /* Lives INSIDE .site-header so it shares the header's stacking context: the
+     header's z-index:60 makes it a stacking context, so a sibling backdrop would
+     paint over the whole header (menu included) and blur it. Within the header
+     the order is backdrop(1) < header-inner(2), so the bar, brand and menu stay
+     crisp above the dim layer. */
+  position: fixed; inset: 0; z-index: 1;
   background: rgba(31, 42, 44, 0.5);
   -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
   opacity: 0; pointer-events: none; transition: opacity 0.3s var(--ease);
@@ -778,8 +786,8 @@ tbody tr:hover { background: rgba(244, 237, 225, 0.4); }
   .nav {
     position: fixed; top: 0; left: 0; bottom: 0; width: min(300px, 84vw); z-index: 100;
     background: var(--cream); flex-direction: column; align-items: stretch; gap: 0;
-    /* Starts below the header row (which sits under the announcement bar), so the
-       panel never hides the brand or the hamburger/close button. */
+    /* Links start below the header row so they never sit behind the brand or the
+       header controls; the panel background itself still covers the header. */
     padding: calc(var(--header-h) + 74px) 22px 26px; box-shadow: var(--shadow-lg);
     overflow-y: auto; overscroll-behavior: contain;
     /* Keeps the off-screen panel out of the tab order once it has slid away. */

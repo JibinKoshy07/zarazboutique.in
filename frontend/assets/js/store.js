@@ -101,6 +101,7 @@
     host.innerHTML = `
       <div class="announce">Complimentary shipping across India on orders above ₹4,999 &nbsp;•&nbsp; Handpicked sarees, woven to last</div>
       <header class="site-header">
+        <div class="nav-backdrop" data-nav-backdrop></div>
         <div class="container container-wide header-inner">
           <button class="icon-btn nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="primary-nav" data-nav-toggle>${ICONS.menu}</button>
           <a class="brand" href="index.html">
@@ -119,8 +120,7 @@
             </button>
           </div>
         </div>
-      </header>
-      <div class="nav-backdrop" data-nav-backdrop></div>`;
+      </header>`;
 
     host.querySelector('[data-nav-toggle]').addEventListener('click', () => {
       setMenu(!host.querySelector('[data-nav]').classList.contains('open'));
