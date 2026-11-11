@@ -165,6 +165,16 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  name: api
+  namespace: zaraz
+spec:
+  selector: { app: api }
+  ports:
+    - port: 4000
+---
+apiVersion: v1
+kind: Service
+metadata:
   name: api-nodeport
   namespace: zaraz
 spec:
@@ -206,6 +216,16 @@ spec:
           resources:
             requests: { cpu: 50m, memory: 32Mi }
             limits: { memory: 128Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: zaraz
+spec:
+  selector: { app: web }
+  ports:
+    - port: 80
 ---
 apiVersion: v1
 kind: Service
