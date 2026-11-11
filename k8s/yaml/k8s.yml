@@ -4,17 +4,6 @@ metadata:
   name: zaraz
 ---
 apiVersion: v1
-kind: Secret
-metadata:
-  name: zaraz-secrets
-  namespace: zaraz
-type: Opaque
-stringData:
-  DB_PASSWORD: "cc46bdd3481f30ce"
-  JWT_SECRET: "dbb3b73b11df85adec781f0e29f6a70ba324c63d64a9d0a3e047c8313b6670aa"   # openssl rand -hex 32
-  ADMIN_PASSWORD: "84d9e231c17f6f69"
----
-apiVersion: v1
 kind: ConfigMap
 metadata:
   name: zaraz-config
@@ -28,8 +17,10 @@ data:
   DB_USER: "zaraz_user"
   DB_POOL_MAX: "10"
   DB_SSL: "false"
-  API_PUBLIC_URL: "https://zarazboutique.in"
-  ALLOWED_ORIGINS: "https://zarazboutique.in"
+  API_PUBLIC_URL: "https://www.zarazboutique.in"
+  ALLOWED_ORIGINS: "https://www.zarazboutique.in,https://zarazboutique.in"
+  ADMIN_EMAIL: "admin@zarazboutique.in"
+  ADMIN_NAME: "Store Admin"
   JWT_EXPIRES_IN: "7d"
   ADMIN_EMAIL: "admin@zarazboutique.in"
   ADMIN_NAME: "Store Admin"
