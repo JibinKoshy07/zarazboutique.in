@@ -231,9 +231,30 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
+    - host: www.zarazboutique.in
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port: { number: 4000 }
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web
+                port: { number: 80 }
     - host: zarazboutique.in
       http:
         paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port: { number: 4000 }
           - path: /
             pathType: Prefix
             backend:
