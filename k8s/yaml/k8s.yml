@@ -142,7 +142,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: zaraz-api:1.0
+          image: jibu07/zaraz-api:1.0
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 4000
@@ -197,7 +197,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: zaraz-web:1.0
+          image: jibu07/zaraz-web:1.0
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
@@ -240,4 +240,3 @@ spec:
               service:
                 name: web
                 port: { number: 80 }
-                
