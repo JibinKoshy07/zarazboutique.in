@@ -9,7 +9,8 @@
     { icon: 'phone', title: 'Personal styling help', text: 'Talk to us on WhatsApp' },
   ];
 
-  // Fallback imagery keeps category tiles looking complete before products load.
+  // Fallback imagery keeps category tiles looking complete when a category has
+  // no image set in the admin console.
   const CATEGORY_IMAGES = {
     'Banarasi Silk': 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=700&q=80',
     Kanjeevaram: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=700&q=80',
@@ -20,6 +21,8 @@
     'Bridal Couture': 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=700&q=80',
     'Designer Party Wear': 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=700&q=80',
   };
+
+  const categoryImage = (category) => category.image || CATEGORY_IMAGES[category.name] || '';
 
   const mountValueStrip = () => {
     const host = document.querySelector('[data-value-strip]');
@@ -54,7 +57,7 @@
         .map(
           (category) => `
         <a class="category-card" href="shop.html?category=${category.id}">
-          <img src="${escapeHtml(CATEGORY_IMAGES[category.name] || '')}" alt="${escapeHtml(category.name)} sarees" loading="lazy" />
+          <img src="${escapeHtml(categoryImage(category))}" alt="${escapeHtml(category.name)} sarees" loading="lazy" />
           <div class="category-card-body">
             <h3>${escapeHtml(category.name)}</h3>
             <span>${category.productCount || 0} design${category.productCount === 1 ? '' : 's'}</span>

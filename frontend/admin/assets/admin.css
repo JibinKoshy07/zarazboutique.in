@@ -338,6 +338,8 @@ td.actions .btn { margin-right: 4px; }
   position: absolute; bottom: 0; left: 0; right: 0; background: rgba(15, 109, 125, 0.85); color: #fff;
   font-size: 0.6rem; text-align: center; padding: 2px;
 }
+.cell-thumb { width: 38px; height: 46px; border-radius: 6px; object-fit: cover; border: 1px solid var(--a-line); flex: none; }
+.cell-thumb-empty { display: block; background: var(--a-bg); }
 .chip-input { display: flex; flex-wrap: wrap; gap: 7px; padding: 8px; border: 1px solid var(--a-line); border-radius: 7px; background: var(--a-surface); }
 .chip-input .chip {
   display: inline-flex; align-items: center; gap: 6px; background: var(--a-bg); border-radius: 999px;

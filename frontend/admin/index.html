@@ -208,6 +208,20 @@
             <textarea class="textarea" id="c-description" name="description" placeholder="What makes this weave special?"></textarea>
             <div class="field-error"></div>
           </div>
+          <div class="field">
+            <label>Category image</label>
+            <input type="hidden" name="image" data-category-image-value />
+            <div class="image-list" data-category-image-list></div>
+            <div class="flex gap-12 wrap">
+              <input class="input" type="url" placeholder="Paste an image URL" data-category-image-url style="flex:1;min-width:180px" />
+              <label class="btn btn-outline btn-sm" style="margin:0">
+                Upload <input type="file" accept="image/*" hidden data-category-image-upload />
+              </label>
+              <button class="btn btn-outline btn-sm" type="button" data-category-image-add>Use URL</button>
+            </div>
+            <p class="small muted" style="margin:8px 0 0">Shown on the storefront category tile. Leave empty to use the built-in default.</p>
+            <div class="field-error"></div>
+          </div>
           <div class="form-row">
             <div class="field">
               <label for="c-sort">Sort order</label>

@@ -112,6 +112,15 @@ sandbox URL) — a hardcoded URL breaks local dev whenever sandbox code is pulle
 - Dashboard stats: revenue, orders, products, customers, pending, low stock,
   recent orders, top products (top products include stock + threshold).
 - Categories support exactly ONE level of subcategories.
+- Each category carries a single `image` (nullable `VARCHAR(1024)`) shown on the
+  storefront category tile. Admins set it from the category modal (upload, or
+  paste a URL); `frontend/assets/js/pages/home.js` falls back to its built-in
+  `CATEGORY_IMAGES` map when a category has no image.
+- ⚠ Optional text fields must be `.nullish()` in zod, NOT
+  `.optional().or(z.literal(''))`. The admin forms send `null` for a blank field
+  (`values.x ? values.x.trim() : null`), and `.optional()` rejects `null`, which
+  made "Add category"/"Add product" fail with a 400 whenever a text field was
+  left empty. The service layer already coalesces `payload.x || null`.
 
 ## Testing locally (this sandbox)
 - Run the API on the sandbox port (e.g. `PORT=12001 node src/index.js`) with a

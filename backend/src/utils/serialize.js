@@ -8,6 +8,7 @@ const toCategory = (row) => {
     name: row.name,
     slug: row.slug,
     description: row.description,
+    image: row.image || null,
     parentId: row.parent_id,
     parentName: row.parent_name || null,
     sortOrder: row.sort_order,

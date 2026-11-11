@@ -12,14 +12,14 @@ const randomPassword = () => randomBytes(18).toString('base64url');
  * looks complete on first boot; admins can replace them from the console.
  */
 const CATEGORIES = [
-  { name: 'Banarasi Silk', description: 'Handwoven Banarasi silks with zari brocade work.', children: ['Katan Silk', 'Tissue Silk'] },
-  { name: 'Kanjeevaram', description: 'Temple-border Kanjeevaram sarees from Tamil Nadu.' },
-  { name: 'Chiffon', description: 'Feather-light chiffon drapes for everyday elegance.' },
-  { name: 'Georgette', description: 'Flowy georgette sarees with delicate embroidery.' },
-  { name: 'Cotton Handloom', description: 'Breathable handloom cottons woven by artisan clusters.' },
-  { name: 'Organza', description: 'Sheer organza sarees with painterly florals.' },
-  { name: 'Bridal Couture', description: 'Statement bridal drapes with heavy hand embroidery.' },
-  { name: 'Designer Party Wear', description: 'Sequins, crystals and contemporary silhouettes.' },
+  { name: 'Banarasi Silk', description: 'Handwoven Banarasi silks with zari brocade work.', image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?w=700&q=80', children: ['Katan Silk', 'Tissue Silk'] },
+  { name: 'Kanjeevaram', description: 'Temple-border Kanjeevaram sarees from Tamil Nadu.', image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=700&q=80' },
+  { name: 'Chiffon', description: 'Feather-light chiffon drapes for everyday elegance.', image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=700&q=80' },
+  { name: 'Georgette', description: 'Flowy georgette sarees with delicate embroidery.', image: 'https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?w=700&q=80' },
+  { name: 'Cotton Handloom', description: 'Breathable handloom cottons woven by artisan clusters.', image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=700&q=80' },
+  { name: 'Organza', description: 'Sheer organza sarees with painterly florals.', image: 'https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=700&q=80' },
+  { name: 'Bridal Couture', description: 'Statement bridal drapes with heavy hand embroidery.', image: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=700&q=80' },
+  { name: 'Designer Party Wear', description: 'Sequins, crystals and contemporary silhouettes.', image: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=700&q=80' },
 ];
 
 const SIZES = ['Free Size', 'S', 'M', 'L', 'XL', 'Unstitched'];
@@ -311,8 +311,8 @@ const seedCategories = async (client) => {
   let order = 0;
   for (const category of CATEGORIES) {
     const parent = await client.query(
-      `INSERT INTO categories (name, slug, description, sort_order) VALUES ($1,$2,$3,$4) RETURNING id`,
-      [category.name, slugify(category.name), category.description, order++]
+      `INSERT INTO categories (name, slug, description, image, sort_order) VALUES ($1,$2,$3,$4,$5) RETURNING id`,
+      [category.name, slugify(category.name), category.description, category.image || null, order++]
     );
     ids[category.name] = parent.rows[0].id;
 

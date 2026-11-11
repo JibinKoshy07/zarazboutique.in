@@ -92,10 +92,18 @@ const createCategory = async (payload) => {
   const parentId = await assertValidParent(payload.parent_id);
   const slug = await uniqueSlug(payload.name);
   const { rows } = await query(
-    `INSERT INTO categories (name, slug, description, parent_id, sort_order, is_active)
-     VALUES ($1, $2, $3, $4, $5, $6)
+    `INSERT INTO categories (name, slug, description, image, parent_id, sort_order, is_active)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
      RETURNING *`,
-    [payload.name, slug, payload.description || null, parentId, payload.sort_order || 0, payload.is_active !== false]
+    [
+      payload.name,
+      slug,
+      payload.description || null,
+      payload.image || null,
+      parentId,
+      payload.sort_order || 0,
+      payload.is_active !== false,
+    ]
   );
   return toCategory(rows[0]);
 };
@@ -109,8 +117,8 @@ const updateCategory = async (id, payload) => {
 
   const { rows } = await query(
     `UPDATE categories
-        SET name = $2, slug = $3, description = $4, parent_id = $5,
-            sort_order = $6, is_active = $7, updated_at = now()
+        SET name = $2, slug = $3, description = $4, image = $5, parent_id = $6,
+            sort_order = $7, is_active = $8, updated_at = now()
       WHERE id = $1
       RETURNING *`,
     [
@@ -118,6 +126,7 @@ const updateCategory = async (id, payload) => {
       payload.name,
       slug,
       payload.description || null,
+      payload.image || null,
       parentId,
       payload.sort_order ?? existing.rows[0].sort_order,
       payload.is_active !== false,
